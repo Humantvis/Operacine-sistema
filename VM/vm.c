@@ -20,11 +20,14 @@ void destroyVM(VM* vm) {
 }
 
 void runVM(VM* vm) {
-    while(vm->memory->codeMemory + (*(vm->cpu->ic) * WORD_SIZE) != HALT) {
-        int currentWord = vm->memory->codeMemory + (*(vm->cpu->ic) * WORD_SIZE);
+    while (1) {
+        uint8_t* instr_ptr = vm->memory->codeMemory + (*(vm->cpu->ic)) * WORD_SIZE;
 
-        //use current word to know what command to execute
+        uint32_t instruction = *(uint32_t*)instr_ptr;
 
-        vm->cpu->ic++;
+        if (instruction == HALT) // case when HALT - break
+            break;
+
+        (*(vm->cpu->ic))++;
     }
 }
