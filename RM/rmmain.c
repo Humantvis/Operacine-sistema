@@ -1,4 +1,4 @@
-#include <cstdint>
+#include <stdint.h>
 
 typedef int64_t reg_t;
 typedef uint8_t byte_t;
