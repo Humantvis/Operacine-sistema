@@ -1,7 +1,8 @@
 #pragma once
 
 #include "cpu.h"
-#include "vmmemory.h"
+
+#include "vmMemory.h"
 
 typedef struct {
     CPU* cpu;
@@ -9,5 +10,7 @@ typedef struct {
 } VM;
 
 void initVM(VM* vm, CPU* cpu, VM_Memory* memory);
+
+void destroyVM(VM* vm);
 
 void runVM(VM* vm);
