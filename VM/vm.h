@@ -1,15 +1,15 @@
 #pragma once
 
 #include "cpu.h"
-#include "memory.h"
+#include "vmMemory.h"
 
 typedef struct {
     CPU* cpu;
-    Memory* memory;
+    VM_Memory* memory;
 } VM;
 
-int initVM(VM* vm, CPU* cpu, Memory* memory);
+void initVM(VM* vm, CPU* cpu, VM_Memory* memory);
 
-int destroyVM(VM* vm);
+void destroyVM(VM* vm);
 
 void runVM(VM* vm);
