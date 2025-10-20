@@ -1,15 +1,15 @@
 #include "vm.h"
 
-int initVM(VM* vm, CPU* cpu, Memory* memory) {
+#define HALT 0
+
+void initVM(VM* vm, CPU* cpu, VM_Memory* memory) {
     vm->cpu = cpu;
     vm->memory = memory;
 }
 
-int destroyVM(VM* vm) {
-    delete(vm->cpu);
-    delete(vm->memory);
-}
-
 void runVM(VM* vm) {
-
+    while(vm->memory->codeMemory[vm->cpu->ic] != HALT) {
+        
+        (vm->cpu->ic) += WORD_SIZE;
+    }
 }
