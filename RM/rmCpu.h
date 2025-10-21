@@ -2,13 +2,13 @@
 
 #include <stdint.h>
 
-#include "vm.h"
-#include "rm.h"
+typedef struct RM RM;
+typedef struct VM VM;
 
 enum {
     SUPER,
     USER
-}modes;
+};
 
 #define REGISTERS 16
 

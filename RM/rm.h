@@ -1,10 +1,9 @@
 #pragma once
 
 #include "rmCpu.h"
-
 #include "rmMemory.h"
 
-typedef struct {
+typedef struct RM {
     RM_CPU* cpu;
     RM_Memory* memory;
 } RM;
