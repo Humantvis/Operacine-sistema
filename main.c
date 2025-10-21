@@ -4,7 +4,7 @@
 #include "RM/rm.h"
 
 int VMcounter = 0;
-VM* createVM(uint8_t* memoryPointer, int id);
+VM* createVM(RM* rm, int id);
 
 int main() {
     RM_Memory* rmMemory = malloc(sizeof(RM_Memory));
@@ -26,9 +26,9 @@ int main() {
     return 0;
 }
 
-VM* createVM(uint8_t* memoryPointer, int id) {
+VM* createVM(RM* rm, int id) {
     VM_Memory* vmMemory = malloc(sizeof(VM_Memory));
-    initializeVirtualMemory(vmMemory, memoryPointer+ VMcounter* (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY) * PAGE_SIZE * WORD_SIZE);
+    initializeVirtualMemory(vmMemory, rm->memory->userMemory + VMcounter* (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY) * PAGE_SIZE * WORD_SIZE);
 
     VM_CPU* cpu = malloc(sizeof(VM_CPU));
     initVMCPU(cpu, vmMemory);

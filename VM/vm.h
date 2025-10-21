@@ -9,7 +9,7 @@
 #include<stdlib.h>
 #include<stdbool.h>
 
-typedef struct {
+typedef struct VM {
     int id;
     VM_CPU* cpu;
     VM_Memory* memory;

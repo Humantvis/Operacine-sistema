@@ -1,5 +1,8 @@
 #include "rmCpu.h"
 
+#include "rm.h"
+#include "../VM/vm.h"
+
 #define VM_RAM_SIZE REGISTERS + 2
 
 void initRMCPU(RM_CPU* cpu) {
@@ -23,7 +26,7 @@ void initRMCPU(RM_CPU* cpu) {
 }
 
 void mountVM(RM* rm, VM* vm) {
-    rm->cpu->ic = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE];
+    *(rm->cpu->ic) = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE];
     
     rm->cpu->fr = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE + WORD_SIZE - 1];
     
