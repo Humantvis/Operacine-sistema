@@ -2,8 +2,6 @@
 
 #define HALT 0
 
-#include<stdlib.h>
-
 void initVM(VM* vm, VM_CPU* cpu, VM_Memory* memory, int id) {
     vm->cpu = cpu;
     vm->memory = memory;
@@ -20,8 +18,8 @@ void destroyVM(VM* vm) {
     free(vm);
 }
 
-void runVM(VM* vm) {
-    while (allowedToRun(vm)) {
+void runVM(RM* rm, VM* vm) {
+    while (allowedToRun(rm, vm)) {
         uint8_t* instr_ptr = vm->memory->codeMemory + (*(vm->cpu->ic)) * WORD_SIZE;
 
         uint32_t instruction = *(uint32_t*)instr_ptr;
@@ -31,4 +29,8 @@ void runVM(VM* vm) {
 
         (*(vm->cpu->ic))++;
     }
+}
+
+bool allowedToRun(RM* rm, VM* vm) {
+    return rm->cpu->mountedVMID == vm->id;
 }
