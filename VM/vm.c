@@ -4,9 +4,10 @@
 
 #include<stdlib.h>
 
-void initVM(VM* vm, CPU* cpu, VM_Memory* memory) {
+void initVM(VM* vm, VM_CPU* cpu, VM_Memory* memory, int id) {
     vm->cpu = cpu;
     vm->memory = memory;
+    vm->id = id;
 }
 
 void destroyVM(VM* vm) {
@@ -20,7 +21,7 @@ void destroyVM(VM* vm) {
 }
 
 void runVM(VM* vm) {
-    while (1) {
+    while (allowedToRun(vm)) {
         uint8_t* instr_ptr = vm->memory->codeMemory + (*(vm->cpu->ic)) * WORD_SIZE;
 
         uint32_t instruction = *(uint32_t*)instr_ptr;
