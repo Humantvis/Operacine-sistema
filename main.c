@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include "VM/vm.h"
 #include "RM/rm.h"
+#include "parser/parser.h"
 
 int VMcounter = 0;
 VM* createVM(RM* rm, int id);
+int parse(RM* rm, const char* filename, int offset);
 
 int main() {
     RM_Memory* rmMemory = malloc(sizeof(RM_Memory));
@@ -23,6 +25,8 @@ int main() {
     destroyVM(vm1);
     destroyVM(vm2);
     destroyVM(vm3);
+
+    parse(rm, "code.txt", 0);
     return 0;
 }
 

@@ -5,3 +5,5 @@ enum {
     DATA,
     CODE
 };
+
+int parse(RM *rm, const char *filename, int nr);
