@@ -1,13 +1,10 @@
 #include "parser.h"
 
-void opCode(RM* rm, int nr, int* address, int opcode);
+void writeOpCode(RM* rm, int nr, int* address, int* offset, int opcode);
 
-void register1(RM* rm, int nr, int* address, int r1);
-void register2(RM* rm, int nr, int* address, bool* hasAddress, int r2);
-void register3(RM* rm, int nr, int* address, int r3);
-void register4(RM* rm, int nr, int* address, int r4);
+void writeReg(RM* rm, int nr, int* address, int* offset, int r1);
 
-void address1(RM* rm, int nr, int* address, bool* hasAddress, int value);
+void writeAddress(RM* rm, int nr, int* address, int* offset, int value);
 
 // // For testing: print bits of a byte
 // void print_bits(uint8_t value) {
@@ -40,12 +37,14 @@ int parse(RM *rm, const char *filename, int nr) {
     
     *address = 0;
 
-    bool* hasAddress = malloc(sizeof(bool));
-    if (hasAddress == NULL) {
+    int* offset = malloc(sizeof(int));
+    if (offset == NULL) {
         fclose(file);
-        free(hasAddress);
+        free(address);
         return 1;
     }
+
+    *offset = 0;
 
     char line[1024];
 
@@ -85,48 +84,47 @@ int parse(RM *rm, const char *filename, int nr) {
             rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + tempAddress] = value;
 
         } else {
-            *hasAddress = false;
             int o1, o2, o3, o4;
 
             // Aritmetines komandos
             if(strncmp(codeStart, "ADD", 3) == 0) {
                 if(sscanf(codeStart, "%*s R%x R%x R%x", &o1, &o2, &o3) == 3) {
-                    opCode(rm, nr, address, ADDxyz);
-                    register1(rm, nr, address, o1);
-                    register2(rm, nr, address, hasAddress, o2);
-                    register3(rm, nr, address, o3);
+                    writeOpCode(rm, nr, address, offset, ADDxyz);
+                    writeReg(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
+                    writeReg(rm, nr, address, offset, o3);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "SUB", 3) == 0) {
                 if(sscanf(codeStart, "%*s R%x R%x R%x", &o1, &o2, &o3) == 3) {
-                    opCode(rm, nr, address, SUBxyz);
-                    register1(rm, nr, address, o1);
-                    register2(rm, nr, address, hasAddress, o2);
-                    register3(rm, nr, address, o3);
+                    writeOpCode(rm, nr, address, offset, SUBxyz);
+                    writeReg(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
+                    writeReg(rm, nr, address, offset, o3);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "MUL", 3) == 0) {
                 if(sscanf(codeStart, "%*s R%x R%x R%x R%x", &o1, &o2, &o3, &o4) == 4) {
-                    opCode(rm, nr, address, MULxyzw);
-                    register1(rm, nr, address, o1);
-                    register2(rm, nr, address, hasAddress, o2);
-                    register3(rm, nr, address, o3);
-                    register4(rm, nr, address, o4);
+                    writeOpCode(rm, nr, address, offset, MULxyzw);
+                    writeReg(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
+                    writeReg(rm, nr, address, offset, o3);
+                    writeReg(rm, nr, address, offset, o4);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "DIV", 3) == 0) {
                 if(sscanf(codeStart, "%*s R%x R%x R%x R%x", &o1, &o2, &o3, &o4) == 4) {
-                    opCode(rm, nr, address, DIVxyzw);
-                    register1(rm, nr, address, o1);
-                    register2(rm, nr, address, hasAddress, o2);
-                    register3(rm, nr, address, o3);
-                    register4(rm, nr, address, o4);
+                    writeOpCode(rm, nr, address, offset, DIVxyzw);
+                    writeReg(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
+                    writeReg(rm, nr, address, offset, o3);
+                    writeReg(rm, nr, address, offset, o4);
                 } else {
                     fclose(file);
                     return 1;
@@ -135,9 +133,9 @@ int parse(RM *rm, const char *filename, int nr) {
             // Palyginimo komandos
             else if(strncmp(codeStart, "CMP", 3) == 0) {
                 if(sscanf(codeStart, "%*s R%x R%x", &o1, &o2) == 2) {
-                    opCode(rm, nr, address, CMPxy);
-                    register1(rm, nr, address, o1);
-                    register2(rm, nr, address, hasAddress, o2);
+                    writeOpCode(rm, nr, address, offset, CMPxy);
+                    writeReg(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
                 } else {
                     fclose(file);
                     return 1;
@@ -146,50 +144,50 @@ int parse(RM *rm, const char *filename, int nr) {
             // Darbo su atmintimi komandos
             else if(strncmp(codeStart, "MR", 2) == 0) {
                 if(sscanf(codeStart, "%*s %x R%x", &o1, &o2) == 2) {
-                    opCode(rm, nr, address, MRxyz);
-                    address1(rm, nr, address, hasAddress, o1);
-                    register2(rm, nr, address, hasAddress, o2);
+                    writeOpCode(rm, nr, address, offset, MRxyz);
+                    writeAddress(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "MW", 2) == 0) {
                 if(sscanf(codeStart, "%*s %x R%x", &o1, &o2) == 2) {
-                    opCode(rm, nr, address, MWxyz);
-                    address1(rm, nr, address, hasAddress, o1);
-                    register2(rm, nr, address, hasAddress, o2);
+                    writeOpCode(rm, nr, address, offset, MWxyz);
+                    writeAddress(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "SMR", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x R%x", &o1, &o2) == 2) {
-                    opCode(rm, nr, address, SMRxyz);
-                    address1(rm, nr, address, hasAddress, o1);
-                    register2(rm, nr, address, hasAddress, o2);
+                    writeOpCode(rm, nr, address, offset, SMRxyz);
+                    writeAddress(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "SMW", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x R%x", &o1, &o2) == 2) {
-                    opCode(rm, nr, address, SMWxyz);
-                    address1(rm, nr, address, hasAddress, o1);
-                    register2(rm, nr, address, hasAddress, o2);
+                    writeOpCode(rm, nr, address, offset, SMWxyz);
+                    writeAddress(rm, nr, address, offset, o1);
+                    writeReg(rm, nr, address, offset, o2);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "WAIT", 4) == 0) {
                 if(sscanf(codeStart, "%*s") == 0) {
-                    opCode(rm, nr, address, WAIT);
+                    writeOpCode(rm, nr, address, offset, WAIT);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "SIGNAL", 4) == 0) {
                 if(sscanf(codeStart, "%*s") == 0) {
-                    opCode(rm, nr, address, SIGNAL);
+                    writeOpCode(rm, nr, address, offset, SIGNAL);
                 } else {
                     fclose(file);
                     return 1;
@@ -198,79 +196,79 @@ int parse(RM *rm, const char *filename, int nr) {
             // Valdymo komandos
             else if(strncmp(codeStart, "JMP", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JMPxy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JMPxy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JE", 2) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JExy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JExy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JNE", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JNExy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JNExy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JG", 2) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JGxy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JGxy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JGE", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JGExy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JGExy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JL", 2) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JLxy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JLxy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JLE", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JLExy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JLExy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JC", 2) == 0) {
                 if(sscanf(codeStart, "%*s   %x", &o1) == 1) {
-                    opCode(rm, nr, address, JCxy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JCxy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "JNC", 3) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, JNCxy);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, JNCxy);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "HALT", 4) == 0) {
                 if(sscanf(codeStart, "%*s") == 0) {
-                    opCode(rm, nr, address, HALT);
+                    writeOpCode(rm, nr, address, offset, HALT);
                 } else {
                     fclose(file);
                     return 1;
@@ -279,16 +277,16 @@ int parse(RM *rm, const char *filename, int nr) {
             // Ivedimo/Išvedimo komandos
             else if(strncmp(codeStart, "DMAR", 4) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, DMARx);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, DMARx);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
                 }
             } else if(strncmp(codeStart, "DMAW", 4) == 0) {
                 if(sscanf(codeStart, "%*s %x", &o1) == 1) {
-                    opCode(rm, nr, address, DMAWx);
-                    address1(rm, nr, address, hasAddress, o1);
+                    writeOpCode(rm, nr, address, offset, DMAWx);
+                    writeAddress(rm, nr, address, offset, o1);
                 } else {
                     fclose(file);
                     return 1;
@@ -306,39 +304,39 @@ int parse(RM *rm, const char *filename, int nr) {
     return 0;
 }
 
-void opCode(RM* rm, int nr, int* address, int opcode) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] = opcode << 3;
-    (*address)++;
-}
-
-void register1(RM* rm, int nr, int* address, int r1) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1] |= (r1 >> 1);
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] = (r1 & 0b00000001) << 7;
-    (*address)++;
-}
-
-void register2(RM* rm, int nr, int* address, bool* hasAddress, int r2) {
-    if (*hasAddress == false) {
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1] |= (r2 << 3);
-        return;
+void writeOpCode(RM* rm, int nr, int* address, int* offset, int opcode) {
+    if(*offset <= 3) {
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (opcode << (3 - *offset));
     } else {
-        register3(rm, nr, address, r2);
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (opcode >> (*offset - 3));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (opcode << (11 - *offset));
+    }
+
+    *offset += 5;
+    if(*offset >= 8) {
+        *offset = *offset % 8;
+        (*address)++;
     }
 }
 
-void register3(RM* rm, int nr, int* address, int r3) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1] |= (r3 >> 1);
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] = (r3 & 0b00000001) << 7;
-    (*address)++;
+void writeReg(RM* rm, int nr, int* address, int* offset, int r) {
+    if(*offset <= 4) {
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (r << (4 - *offset));
+    } else {
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (r >> (*offset - 4));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (r << (12 - *offset));
+    }
+
+    *offset += 4;
+    if(*offset >= 8) {
+        *offset = *offset % 8;
+        (*address)++;
+    }
 }
 
-void register4(RM* rm, int nr, int* address, int r4) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1] |= (r4 << 3);
-}
+void writeAddress(RM* rm, int nr, int* address, int* offset, int value) {
+    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (value >> *offset);
+    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (value << (8 - *offset));
 
-void address1(RM* rm, int nr, int* address, bool* hasAddress, int value) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1] |= (value >> 5);
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] = (value & 0b00011111) << 3;
     (*address)++;
-    *hasAddress = true;
 }
