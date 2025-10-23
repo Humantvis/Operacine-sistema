@@ -43,11 +43,10 @@ int parse(RM *rm, const char *filename, int nr) {
         if(phase == DATA) {
             int value = 0;
 
-            for (int i = 3; i < (int)(codeEnd - codeStart); i++) {
-                value = value * 16 + (codeStart[i] - '0');
+            if(sscanf(codeStart, "%x %x", &address, &value) != 2) {
+                fclose(file);
+                return 1;
             }
-
-            int address = (codeStart[0] - '0') * 16 + (codeStart[1] - '0');
 
             if(address < 0 || address >= DATA_MEMORY * PAGE_SIZE * WORD_SIZE) {
                 fclose(file);
@@ -62,7 +61,7 @@ int parse(RM *rm, const char *filename, int nr) {
 
                 rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + address] = ADDxyz << 3;
 
-                if(sscanf(codeStart, "%*s R%d R%d R%d", &r1, &r2, &r3) == 3) {
+                if(sscanf(codeStart, "%*s R%x R%x R%x", &r1, &r2, &r3) == 3) {
                     rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + address] |= (r1 >> 1);
                     rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + address + 1] = (r1 & 0b00000001) << 7 | (r2 << 3) | (r3 >> 1);
                     rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + address + 2] = (r3 & 0b00000001) << 7;
