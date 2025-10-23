@@ -34,8 +34,8 @@ enum opCodes{
     //0:
     WAIT,
     SIGNAL,
-    JNC,
-    JC,
+    JNCxy,
+    JCxy,
     HALT,
     //1:
     DMARx,

@@ -27,6 +27,8 @@ int main() {
     destroyVM(vm3);
 
     parse(rm, "code.txt", 0);
+    
+    destroyRM(rm);
     return 0;
 }
 

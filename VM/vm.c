@@ -146,14 +146,14 @@ void executeInstruction(VM* vm, uint8_t instruction) {
                 *(vm->cpu->ic) = x * 16 + y;
             break;
         }
-        case JC: {
+        case JCxy: {
             uint8_t x = mem[++(*ic)];
             uint8_t y = mem[++(*ic)];
             if (vm->cpu->fr & FLAG_CF) 
                 *(vm->cpu->ic) = x * 16 + y;
             break;
         }
-        case JNC: {
+        case JNCxy: {
             uint8_t x = mem[++(*ic)];
             uint8_t y = mem[++(*ic)];
 
