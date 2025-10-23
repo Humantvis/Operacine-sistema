@@ -9,9 +9,9 @@
 #include<stdlib.h>
 #include<stdbool.h>
 
-#define FLAG_SF 0x01  // Sign flag
-#define FLAG_ZF 0x02  // Zero flag
-#define FLAG_CF 0x04  // Carry flag
+#define FLAG_SF 0b00000001  // Sign flag
+#define FLAG_ZF 0b00000010  // Zero flag
+#define FLAG_CF 0b00000100  // Carry flag
 
 
 typedef struct VM {

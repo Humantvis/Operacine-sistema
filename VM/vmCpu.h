@@ -9,6 +9,7 @@
 typedef struct {
 	uint8_t r[REGISTERS];
     uint8_t* ic;
+    int offset;
     uint8_t fr;
 } VM_CPU;
 
