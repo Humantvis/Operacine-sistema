@@ -6,14 +6,14 @@ void writeReg(RM* rm, int nr, int* address, int* offset, int r1);
 
 void writeAddress(RM* rm, int nr, int* address, int* offset, int value);
 
-// For testing: print bits of a byte
-void print_bits(uint8_t value) {
-    for (int i = sizeof(value) * 8 - 1; i >= 0; i--) {
-        printf("%d", (value >> i) & 1);
-        if (i % 8 == 0) printf(" ");
-    }
-    printf("\n");
-}
+// // For testing: print bits of a byte
+// void print_bits(uint8_t value) {
+//     for (int i = sizeof(value) * 8 - 1; i >= 0; i--) {
+//         printf("%d", (value >> i) & 1);
+//         if (i % 8 == 0) printf(" ");
+//     }
+//     printf("\n");
+// }
 
 int parse(RM *rm, const char *filename, int nr) {
 
@@ -93,9 +93,6 @@ int parse(RM *rm, const char *filename, int nr) {
                     writeReg(rm, nr, address, offset, o1);
                     writeReg(rm, nr, address, offset, o2);
                     writeReg(rm, nr, address, offset, o3);
-                    print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 2]);
-                    print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address - 1]);
-                    print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address]);
                 } else {
                     fclose(file);
                     return 1;
