@@ -65,8 +65,6 @@ int parse(RM *rm, const char *filename, int nr) {
         }
         *codeEnd = '\0';
 
-        printf("%s\n", codeStart);
-
         if(strncmp(codeStart, "$START", 6) == 0) {
             phase = CODE;
         } else if(phase == DATA) {
