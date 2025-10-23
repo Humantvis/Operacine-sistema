@@ -9,6 +9,8 @@
 #include<stdlib.h>
 #include<stdbool.h>
 
+#include <stdio.h>
+
 #define FLAG_SF 0b00000001  // Sign flag
 #define FLAG_ZF 0b00000010  // Zero flag
 #define FLAG_CF 0b00000100  // Carry flag

@@ -306,10 +306,10 @@ int parse(RM *rm, const char *filename, int nr) {
 
 void writeOpCode(RM* rm, int nr, int* address, int* offset, int opcode) {
     if(*offset <= 3) {
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (opcode << (3 - *offset));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address] |= (opcode << (3 - *offset));
     } else {
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (opcode >> (*offset - 3));
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (opcode << (11 - *offset));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address] |= (opcode >> (*offset - 3));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address + 1] = (opcode << (11 - *offset));
     }
 
     *offset += 5;
@@ -321,10 +321,10 @@ void writeOpCode(RM* rm, int nr, int* address, int* offset, int opcode) {
 
 void writeReg(RM* rm, int nr, int* address, int* offset, int r) {
     if(*offset <= 4) {
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (r << (4 - *offset));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address] |= (r << (4 - *offset));
     } else {
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (r >> (*offset - 4));
-        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (r << (12 - *offset));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address] |= (r >> (*offset - 4));
+        rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address + 1] = (r << (12 - *offset));
     }
 
     *offset += 4;
@@ -335,8 +335,8 @@ void writeReg(RM* rm, int nr, int* address, int* offset, int r) {
 }
 
 void writeAddress(RM* rm, int nr, int* address, int* offset, int value) {
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address] |= (value >> *offset);
-    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE + DATA_MEMORY + *address + 1] = (value << (8 - *offset));
+    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address] |= (value >> *offset);
+    rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address + 1] = (value << (8 - *offset));
 
     (*address)++;
 }

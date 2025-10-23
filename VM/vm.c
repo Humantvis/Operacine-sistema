@@ -1,4 +1,5 @@
 #include "vm.h"
+
 uint8_t readOpCode(VM* vm);
 
 uint8_t readRegister(VM* vm);
@@ -28,9 +29,6 @@ void runVM(RM* rm, VM* vm) {
     }
 }
 
-bool allowedToRun(RM* rm, VM* vm) {
-    return rm->cpu->mountedVMID == vm->id;
-}
 void executeInstruction(VM* vm, uint8_t instruction) {
 
     switch(instruction) {
@@ -127,27 +125,30 @@ void executeInstruction(VM* vm, uint8_t instruction) {
         }
         case JLxy: {
             uint8_t xy = readAddress(vm);
-        if (vm->cpu->fr & FLAG_SF) 
-        *(vm->cpu->ic) = xy;
+            if (vm->cpu->fr & FLAG_SF) { 
+                *(vm->cpu->ic) = xy;
+            }
             break;
         }
         case JLExy: {
             uint8_t xy = readAddress(vm);
-        if ((vm->cpu->fr & FLAG_SF) || (vm->cpu->fr & FLAG_ZF))
+            if ((vm->cpu->fr & FLAG_SF) || (vm->cpu->fr & FLAG_ZF)) {
                 *(vm->cpu->ic) = xy;
+            }
             break;
         }
         case JCxy: {
             uint8_t xy = readAddress(vm);
-            if (vm->cpu->fr & FLAG_CF) 
+            if (vm->cpu->fr & FLAG_CF) {
                 *(vm->cpu->ic) = xy;
+            }
             break;
         }
         case JNCxy: {
             uint8_t xy = readAddress(vm);
-
-            if (!(vm->cpu->fr & FLAG_CF)) 
+            if (!(vm->cpu->fr & FLAG_CF)) {
                 *(vm->cpu->ic) = xy;
+            }
             break;
         }
         case DMARx: {
@@ -188,10 +189,11 @@ uint8_t readAddress1(VM* vm) {
     return ((*(vm->memory->codeMemory + (*(vm->cpu->ic))) & 0b00011111)<< 3) | ((*(vm->memory->codeMemory + (*(vm->cpu->ic) + 1)) & 0b11100000) >> 5);
 }*/
 uint8_t readOpCode(VM* vm) {
+    uint8_t instruction;
     if(vm->cpu->offset <= 3) {
-        return (vm->memory->codeMemory[*(vm->cpu->ic)] >> (3 - vm->cpu->offset)) & 0b00011111;
+        instruction = (*(vm->cpu->ic) >> (3 - vm->cpu->offset)) & 0b00011111;
     } else {
-        return ((vm->memory->codeMemory[*(vm->cpu->ic)] << (vm->cpu->offset - 3)) | (vm->memory->codeMemory[*(vm->cpu->ic) + 1] >> (11 - vm->cpu->offset))) & 0b00011111;
+        instruction = ((*(vm->cpu->ic) << (vm->cpu->offset - 3)) | (*(vm->cpu->ic + 1) >> (11 - vm->cpu->offset))) & 0b00011111;
     }
 
     vm->cpu->offset += 5;
@@ -199,13 +201,16 @@ uint8_t readOpCode(VM* vm) {
         vm->cpu->offset = vm->cpu->offset % 8;
         (vm->cpu->ic)++;
     }
+
+    return instruction;
 }
 
 uint8_t readRegister(VM* vm) {
+    uint8_t reg;
     if(vm->cpu->offset <= 3) {
-        return (vm->memory->codeMemory[*(vm->cpu->ic)] >> (4 - vm->cpu->offset)) & 0b00001111;
+        reg = (*(vm->cpu->ic) >> (4 - vm->cpu->offset)) & 0b00001111;
     } else {
-        return ((vm->memory->codeMemory[*(vm->cpu->ic)] << (vm->cpu->offset - 4)) | (vm->memory->codeMemory[*(vm->cpu->ic) + 1] >> (12 - vm->cpu->offset))) & 0b00001111;
+        reg = ((*(vm->cpu->ic) << (vm->cpu->offset - 4)) | ((*(vm->cpu->ic + 1)) >> (12 - vm->cpu->offset))) & 0b00001111;
     }
 
     vm->cpu->offset += 4;
@@ -213,10 +218,18 @@ uint8_t readRegister(VM* vm) {
         vm->cpu->offset = vm->cpu->offset % 8;
         (vm->cpu->ic)++;
     }
+
+    return reg;
 }
 
 uint8_t readAddress(VM* vm) {
-    return ((vm->memory->codeMemory[*(vm->cpu->ic)] << vm->cpu->offset) | (vm->memory->codeMemory[*(vm->cpu->ic) + 1] >> (8 - vm->cpu->offset)));
+    uint8_t address = ((*(vm->cpu->ic) << vm->cpu->offset) | ((*(vm->cpu->ic + 1)) >> (8 - vm->cpu->offset)));
 
     (vm->cpu->ic)++;
+    
+    return address;
+}
+
+bool allowedToRun(RM* rm, VM* vm) {
+    return rm->cpu->mountedVMID == vm->id;
 }

@@ -6,5 +6,7 @@ void initVMCPU(VM_CPU* cpu, VM_Memory* memory) {
     
     cpu->ic = memory->codeMemory;
 
+    cpu->offset = 0;
+    
     cpu->fr = 0;
 }
