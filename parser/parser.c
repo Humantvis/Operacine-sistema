@@ -93,6 +93,9 @@ int parse(RM *rm, const char *filename, int nr) {
                     writeReg(rm, nr, address, offset, o1);
                     writeReg(rm, nr, address, offset, o2);
                     writeReg(rm, nr, address, offset, o3);
+                    // print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address - 2]);
+                    // print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address - 1]);
+                    // print_bits(rm->memory->userMemory[nr * TOTAL_MEMORY_SIZE * PAGE_TOTAL_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE + *address]);
                 } else {
                     fclose(file);
                     return 1;
