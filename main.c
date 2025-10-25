@@ -21,7 +21,13 @@ int main() {
 
     VM* vm = createVM(rm, 0);
 
+    mountVM(rm, 0);
+
     runVM(rm, vm);
+
+    unmountVM(rm);
+
+    destroyVM(vm);
     
     destroyRM(rm);
     return 0;
@@ -32,12 +38,12 @@ VM* createVM(RM* rm, int id) {
     initializeVirtualMemory(vmMemory, rm->memory->userMemory + rm->cpu->VMCounter * TOTAL_MEMORY_SIZE);
 
     VM_CPU* cpu = malloc(sizeof(VM_CPU));
-    initVMCPU(cpu, vmMemory);
+    initVMCPU(cpu, rm);
 
     VM* vm = malloc(sizeof(VM));
-    initVM(vm, cpu, vmMemory, id);
+    initVM(rm, vm, cpu, vmMemory, id);
 
-    mountNewVM(rm, vm);
+    addNewVM(rm, id);
 
     rm->cpu->VMCounter++;
 

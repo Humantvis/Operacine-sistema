@@ -8,12 +8,12 @@
 #define PAGE_TOTAL_WORDS 16
 #define SHARED_MEMORY 1
 
-#define TOTAL_MEMORY_SIZE (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY) * PAGE_TOTAL_WORDS * WORD_SIZE
+#define TOTAL_MEMORY_SIZE ((DATA_MEMORY + CODE_MEMORY + FREE_MEMORY) * PAGE_TOTAL_WORDS * WORD_SIZE)
 
 #define PAGE_COUNT 16
 #define PAGE_SIZE 16
 
-typedef struct {
+typedef struct VM_Memory {
     uint8_t *dataMemory;
     uint8_t *codeMemory;
     uint8_t *freeMemory;
