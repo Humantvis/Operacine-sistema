@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
+
+#include "rmMemory.h"
+#include "../VM/vmMemory.h"
 
 typedef struct RM RM;
 typedef struct VM VM;
@@ -14,7 +18,7 @@ enum {
 #define REGISTERS 16
 
 typedef struct RM_CPU {
-    int VMCounter;
+    bool VMs[USER_MEMORY_SIZE / (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY)];
     int mountedVMID;
 	uint8_t r[REGISTERS];
     uint8_t* ic;
@@ -34,3 +38,5 @@ void mountVM(RM* rm, int vmID);
 void unmountVM(RM* rm);
 
 void addNewVM(RM* rm, int vmID);
+
+void removeVM(RM* rm, int vmID);

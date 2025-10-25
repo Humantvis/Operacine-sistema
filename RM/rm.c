@@ -1,7 +1,5 @@
 #include "rm.h"
 
-#define HALT 0
-
 #include<stdlib.h>
 
 void initRM(RM* rm, RM_CPU* cpu, RM_Memory* memory) {

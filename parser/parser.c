@@ -66,6 +66,10 @@ int parse(RM *rm, const char *filename, int nr) {
 
         if(strncmp(codeStart, "$START", 6) == 0) {
             phase = CODE;
+        } else if(strncmp(codeStart, "$END", 4) == 0) {
+            fclose(file);
+
+            return 0;
         } else if(phase == DATA) {
             int value = 0;
 
@@ -304,7 +308,7 @@ int parse(RM *rm, const char *filename, int nr) {
 
     fclose(file);
 
-    return 0;
+    return -1;
 }
 
 void writeOpCode(RM* rm, int nr, int* address, int* offset, int opcode) {
