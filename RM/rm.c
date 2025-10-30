@@ -12,6 +12,8 @@ void destroyRM(RM* rm) {
         return;
     }
 
+    free_RM_memory(rm->memory);
+
     free(rm->cpu);
     free(rm->memory);
     free(rm);

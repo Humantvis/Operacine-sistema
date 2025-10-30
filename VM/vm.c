@@ -4,9 +4,11 @@ uint8_t readOpCode(VM* vm, RM* rm);
 
 uint8_t readRegister(VM* vm, RM* rm);
 
-uint8_t* readCodeAddress(VM* vm, RM* rm);
-
 uint8_t* readMemoryAddress(VM* vm, RM* rm);
+
+void jump(VM* vm, RM* rm);
+
+void noJump(VM* vm, RM* rm);
 
 void initVM(RM* rm, VM* vm, VM_CPU* cpu, VM_Memory* memory, int id) {
     vm->rm = rm;
@@ -43,16 +45,22 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
+
             setRegister(vm, z, getRegister(vm, x) + getRegister(vm, y));
+
             printf("ADD: R%d = R%d + R%d -> R%d = %d + %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
             break;
         }
         case SUBxyz: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
+
             setRegister(vm, z, getRegister(vm, x) - getRegister(vm, y));
+
             printf("SUB: R%d = R%d - R%d -> R%d = %d - %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
             break;
         }
         case MULxyzw: {
@@ -60,9 +68,16 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
-            setRegister(vm, z, getRegister(vm, x) * getRegister(vm, y));
-            setRegister(vm, w, getRegister(vm, x) * getRegister(vm, y)); // cia kaz kas ne taip
+
+            uint16_t a = getRegister(vm, x);
+            uint16_t b = getRegister(vm, y);
+            uint16_t result = a * b;
+
+            setRegister(vm, z, result & 0xFF);
+            setRegister(vm, w, (result >> 8) & 0xFF);
+
             printf("MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
             break;
         }
         case DIVxyzw: {
@@ -70,14 +85,18 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
+
             setRegister(vm, z, getRegister(vm, x) / getRegister(vm, y));
             setRegister(vm, w, getRegister(vm, x) % getRegister(vm, y));
+
             printf("DIV: R%d = R%d / R%d -> R%d = %d / %d,   R%d = R%d %% R%d -> R%d = %d %% %d\n", z, x, y, z, getRegister(vm, z), getRegister(vm, x), w, x, y, getRegister(vm, w), getRegister(vm, x), getRegister(vm, y));
+            
             break;
         }
         case CMPxy: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
+            
             if(getRegister(vm, x) == getRegister(vm, y)) {
                 setFr(vm, getFr(vm) | FLAG_ZF);
             } else if(getRegister(vm, x) < getRegister(vm, y)) {
@@ -86,21 +105,29 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
                 setFr(vm, getFr(vm) & ~FLAG_SF);
                 setFr(vm, getFr(vm) & ~FLAG_ZF);
             }
+            
             printf("CMP: R%d cmp R%d -> FR = %d\n", x, y, getFr(vm));
+            
             break;
         }
         case MRxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
+            
             setRegister(vm, z, *xy);
+            
             printf("MR: R%d = M[%d] -> R%d = %d\n", z, xy - vm->memory->dataMemory, z, *xy);
+            
             break;
         }
         case MWxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
+            
             *xy = getRegister(vm, z);
+            
             printf("MW: M[%d] = R%d -> M[%d] = %d\n", xy - vm->memory->dataMemory, z, xy - vm->memory->dataMemory, getRegister(vm, z));
+            
             break;
         }
         case SMRxyz: {
@@ -124,57 +151,76 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             break;
         }
         case JMPxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
-            setIc(vm, xy);
-            printf("JMP: IC = %d\n", xy - vm->memory->codeMemory);
+            jump(vm, rm);
+            
+            printf("JMP: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JExy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_ZF) == FLAG_ZF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JE: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JE: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JGxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) == 0) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JG: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JG: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JLxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_SF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JL: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JL: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JLExy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) || (getFr(vm) & FLAG_ZF)) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JLE: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JLE: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JCxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_CF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JC: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JC: IC = %d\n", getIc(vm));
+            
             break;
         }
         case JNCxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (!(getFr(vm) & FLAG_CF)) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
-            printf("JNC: IC = %d\n", xy - vm->memory->codeMemory);
+            
+            printf("JNC: IC = %d\n", getIc(vm));
+            
             break;
         }
         case DMARx: {
@@ -224,20 +270,44 @@ uint8_t readRegister(VM* vm, RM* rm) {
     return reg;
 }
 
-uint8_t* readCodeAddress(VM* vm, RM* rm) {
-    uint8_t address = (((*getIc(vm) << getOffset(vm)) | ((*(getIc(vm) + 1)) >> (8 - getOffset(vm)))) & 0b11111111);
-
-    setIc(vm, getIc(vm) + 1);
-
-    return vm->memory->codeMemory + address;
-}
-
 uint8_t* readMemoryAddress(VM* vm, RM* rm) {
     uint8_t address = (((*getIc(vm) << getOffset(vm)) | ((*(getIc(vm) + 1)) >> (8 - getOffset(vm)))) & 0b11111111);
 
     setIc(vm, getIc(vm) + 1);
 
     return vm->memory->dataMemory + address;
+}
+
+void jump(VM* vm, RM* rm) {
+    uint8_t jumpLocation;
+
+    if (getOffset(vm) <= 3) {
+        jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+    } else {
+        jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+    }
+
+    size_t base_index = CODE_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE - jumpLocation * 9;
+
+    uint64_t addr_val = 0;
+    for (int i = 0; i < 8; i++) {
+        addr_val |= ((uint64_t)*(vm->memory->codeMemory + base_index + i)) << (i * 8);
+    }
+
+    uint8_t* jumpAddress = (uint8_t*)(uintptr_t)addr_val;
+
+    uint8_t storedOffset = *(vm->memory->codeMemory + base_index + 8);
+    setOffset(vm, storedOffset);
+
+    setIc(vm, jumpAddress);
+}
+
+void noJump(VM* vm, RM* rm) {
+    setOffset(vm, getOffset(vm) + 4);
+    if(getOffset(vm) >= 8) {
+        setOffset(vm, getOffset(vm) % 8);
+        setIc(vm, getIc(vm) + 1);
+    }
 }
 
 bool allowedToRun(RM* rm, VM* vm) {
