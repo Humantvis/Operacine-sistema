@@ -2,6 +2,9 @@
 
 #include "rmCpu.h"
 #include "rmMemory.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 typedef struct Channel_device {
     uint8_t sb; 
@@ -15,7 +18,8 @@ typedef struct Channel_device {
 
 void initChannelDevice(Channel_device* channelDevice, RM_CPU* cpu, RM_Memory* memory);
 void resetChannelDevice(Channel_device* channelDevice);
-int callChannelDevice(Channel_device* channelDevice);
+int inputchannel(Channel_device* channelDevice);
+int outputchannel(Channel_device* channelDevice, const char *data);
 
 enum Objects {
     User_Memory,

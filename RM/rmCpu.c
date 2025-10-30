@@ -19,6 +19,8 @@ void initRMCPU(RM_CPU* cpu) {
     cpu->si = 0;
     
     cpu->ti = 0;
+
+    cpu -> buffer = 0;
 }
 
 void mountVM(RM* rm, int vmID) {

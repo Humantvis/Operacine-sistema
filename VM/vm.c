@@ -27,168 +27,271 @@ void destroyVM(VM* vm) {
 
 void runVM(RM* rm, VM* vm) {
     while (allowedToRun(rm, vm)) {
-        uint8_t instruction = readOpCode(vm, rm);
-        if(instruction == HALT) {
-            printf("HALT\n");
-            break;
-        } else {
-            executeInstruction(vm, instruction, rm);
+
+        if (rm->cpu->buffer != 0)
+        {
+            debug(rm, vm, rm ->channelDevice);
+            uint8_t action = rm->cpu->buffer;
+            if(action ==1)
+            {
+                uint8_t instruction = readOpCode(vm, rm);
+    
+                if(instruction == HALT) {
+                    outputchannel(rm->channelDevice, "HALT");
+                    break;
+                } 
+                else {
+                    executeInstruction(vm, instruction, rm);
+                }
+            }
+            
+        }
+        else if (rm->cpu->buffer == 0) {
+
+                uint8_t instruction = readOpCode(vm, rm);
+
+                if(instruction == HALT) {
+                outputchannel(rm->channelDevice, "HALT");
+                    break;
+                } 
+                else {
+                    executeInstruction(vm, instruction, rm);
+                }
         }
     }
 }
 
 void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
-    switch(instruction) {
+    char message[256]; // reusable buffer for all messages
+
+    switch (instruction) {
         case ADDxyz: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
+
             setRegister(vm, z, getRegister(vm, x) + getRegister(vm, y));
-            printf("ADD: R%d = R%d + R%d -> R%d = %d + %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            snprintf(message, sizeof(message),
+                "ADD: R%d = R%d + R%d -> R%d = %d + %d\n",
+                z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case SUBxyz: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
+
             setRegister(vm, z, getRegister(vm, x) - getRegister(vm, y));
-            printf("SUB: R%d = R%d - R%d -> R%d = %d - %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            snprintf(message, sizeof(message),
+                "SUB: R%d = R%d - R%d -> R%d = %d - %d\n",
+                z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case MULxyzw: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
-            setRegister(vm, z, getRegister(vm, x) * getRegister(vm, y));
-            setRegister(vm, w, getRegister(vm, x) * getRegister(vm, y)); // cia kaz kas ne taip
-            printf("MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            int result = getRegister(vm, x) * getRegister(vm, y);
+            setRegister(vm, z, result);
+            setRegister(vm, w, result); // TODO: check if this logic is correct
+
+            snprintf(message, sizeof(message),
+                "MUL: R%d = R%d * R%d -> R%d = %d * %d\n",
+                z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case DIVxyzw: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
-            setRegister(vm, z, getRegister(vm, x) / getRegister(vm, y));
-            setRegister(vm, w, getRegister(vm, x) % getRegister(vm, y));
-            printf("DIV: R%d = R%d / R%d -> R%d = %d / %d,   R%d = R%d %% R%d -> R%d = %d %% %d\n", z, x, y, z, getRegister(vm, z), getRegister(vm, x), w, x, y, getRegister(vm, w), getRegister(vm, x), getRegister(vm, y));
+
+            int dividend = getRegister(vm, x);
+            int divisor  = getRegister(vm, y);
+
+            if (divisor == 0) {
+                snprintf(message, sizeof(message), "DIV ERROR: Division by zero!\n");
+            } else {
+                setRegister(vm, z, dividend / divisor);
+                setRegister(vm, w, dividend % divisor);
+                snprintf(message, sizeof(message),
+                    "DIV: R%d = R%d / R%d -> %d / %d,  R%d = R%d %% R%d -> %d %% %d\n",
+                    z, x, y, dividend, divisor,
+                    w, x, y, dividend, divisor);
+            }
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case CMPxy: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
-            if(getRegister(vm, x) == getRegister(vm, y)) {
-                setFr(vm, getFr(vm) | FLAG_ZF);
-            } else if(getRegister(vm, x) < getRegister(vm, y)) {
-                setFr(vm, getFr(vm) | FLAG_SF);
+            int fr = getFr(vm);
+
+            if (getRegister(vm, x) == getRegister(vm, y)) {
+                setFr(vm, fr | FLAG_ZF);
+            } else if (getRegister(vm, x) < getRegister(vm, y)) {
+                setFr(vm, fr | FLAG_SF);
             } else {
-                setFr(vm, getFr(vm) & ~FLAG_SF);
-                setFr(vm, getFr(vm) & ~FLAG_ZF);
+                setFr(vm, fr & ~FLAG_SF);
+                setFr(vm, fr & ~FLAG_ZF);
             }
-            printf("CMP: R%d cmp R%d -> FR = %d\n", x, y, getFr(vm));
+
+            snprintf(message, sizeof(message),
+                "CMP: R%d cmp R%d -> FR = %d\n", x, y, getFr(vm));
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case MRxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
             setRegister(vm, z, *xy);
-            printf("MR: R%d = M[%d] -> R%d = %d\n", z, xy - vm->memory->dataMemory, z, *xy);
+
+            snprintf(message, sizeof(message),
+                "MR: R%d = M[%ld] -> R%d = %d\n",
+                z, xy - vm->memory->dataMemory, z, *xy);
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case MWxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
             *xy = getRegister(vm, z);
-            printf("MW: M[%d] = R%d -> M[%d] = %d\n", xy - vm->memory->dataMemory, z, xy - vm->memory->dataMemory, getRegister(vm, z));
+
+            snprintf(message, sizeof(message),
+                "MW: M[%ld] = R%d -> M[%ld] = %d\n",
+                xy - vm->memory->dataMemory, z,
+                xy - vm->memory->dataMemory, getRegister(vm, z));
+
+            outputchannel(rm->channelDevice, message);
             break;
         }
-        case SMRxyz: {
-            //not needed yet
-            printf("SMR: not implemented yet\n");
+
+        case SMRxyz:
+            snprintf(message, sizeof(message), "SMR: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
-        case SMWxyz: {
-            //not needed yet
-            printf("SMW: not implemented yet\n");
+
+        case SMWxyz:
+            snprintf(message, sizeof(message), "SMW: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
-        case WAIT: {
-            //semaphores are not needed yet
-            printf("WAIT: not implemented yet\n");
+
+        case WAIT:
+            snprintf(message, sizeof(message), "WAIT: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
-        case SIGNAL: {
-            //semaphores are not needed yet
-            printf("SIGNAL: not implemented yet\n");
+
+        case SIGNAL:
+            snprintf(message, sizeof(message), "SIGNAL: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
+
         case JMPxy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             setIc(vm, xy);
-            printf("JMP: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JMP: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JExy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_ZF) == FLAG_ZF) {
                 setIc(vm, xy);
             }
-            printf("JE: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JE: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JGxy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) == 0) {
                 setIc(vm, xy);
             }
-            printf("JG: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JG: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JLxy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_SF) {
                 setIc(vm, xy);
             }
-            printf("JL: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JL: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JLExy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) || (getFr(vm) & FLAG_ZF)) {
                 setIc(vm, xy);
             }
-            printf("JLE: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JLE: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JCxy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_CF) {
                 setIc(vm, xy);
             }
-            printf("JC: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JC: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
+
         case JNCxy: {
             uint8_t* xy = readCodeAddress(vm, rm);
             if (!(getFr(vm) & FLAG_CF)) {
                 setIc(vm, xy);
             }
-            printf("JNC: IC = %d\n", xy - vm->memory->codeMemory);
+            snprintf(message, sizeof(message),
+                "JNC: IC = %ld\n", xy - vm->memory->codeMemory);
+            outputchannel(rm->channelDevice, message);
             break;
         }
-        case DMARx: {
-            //not needed yet
-            printf("DMAR: not implemented yet\n");
+
+        case DMARx:
+            snprintf(message, sizeof(message), "DMAR: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
-        case DMAWx: {
-            //not needed yet
-            printf("DMAW: not implemented yet\n");
+
+        case DMAWx:
+            snprintf(message, sizeof(message), "DMAW: not implemented yet\n");
+            outputchannel(rm->channelDevice, message);
             break;
-        }
     }
 }
+
 
 uint8_t readOpCode(VM* vm, RM* rm) {
     uint8_t instruction;

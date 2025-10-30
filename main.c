@@ -3,6 +3,8 @@
 #include "VM/vm.h"
 #include "RM/rm.h"
 #include "parser/parser.h"
+#include "VM/debug.h"
+#include "RM/channelDevice.h"
 
 VM* createVM(RM* rm, int id);
 int parse(RM* rm, const char* filename, int offset);
@@ -13,9 +15,12 @@ int main() {
 
     RM_CPU* rmCpu = malloc(sizeof(RM_CPU));
     initRMCPU(rmCpu);
+    
+    Channel_device* channel = malloc(sizeof(Channel_device));
+    initChannelDevice(channel, rmCpu, rmMemory);
 
     RM* rm = malloc(sizeof(RM));
-    initRM(rm, rmCpu, rmMemory);
+    initRM(rm, rmCpu, rmMemory, channel);
 
     parse(rm, "code.txt", 0);
 
@@ -23,8 +28,10 @@ int main() {
 
     mountVM(rm, 0);
 
-    runVM(rm, vm);
+    debug(rm, vm, channel);
 
+    runVM(rm, vm);
+    
     unmountVM(rm);
 
     destroyVM(vm);

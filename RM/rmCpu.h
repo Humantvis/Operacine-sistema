@@ -25,6 +25,7 @@ typedef struct RM_CPU {
     uint8_t pi;
     uint8_t si;
     uint8_t ti;
+    uint8_t buffer;
 } RM_CPU;
 
 void initRMCPU(RM_CPU* cpu);
