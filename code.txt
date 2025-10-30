@@ -1,0 +1,59 @@
+00 5
+01 0A
+
+
+$START
+
+
+; R1 := [01]
+; 00
+MR 00 R1
+
+; R2 := [02]
+; 03
+MR 01 R2
+
+
+; R3 = R1 + R2
+; 06
+ADD R1 R2 R3
+
+; R4 = R1 - R2
+; 09
+SUB R2 R1 R4
+
+
+; R5, R6 = R1*R2
+; 0C
+MUL R1 R2 R5 R6
+
+; R7 = R1 / R2, R8 = liekana
+; 0F
+DIV R1 R2 R7 R8
+
+
+; jei R3 == R4 -> ZF=1, jei R4 > R3 -> SF=1
+; 12
+CMP R3 R4
+
+
+; sokti i 19 jei lygu
+; 14
+JE 19
+
+
+; Jei nelygu – padvigubinti R3
+; 16
+ADD R3 R3 R3
+
+
+; [01] := R3
+; 19
+MW 01 R3
+
+
+; halt
+; 1C
+HALT
+
+$END

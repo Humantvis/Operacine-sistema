@@ -3,16 +3,12 @@
 #include "rm.h"
 #include "../VM/vm.h"
 
-#define VM_RAM_SIZE REGISTERS + 2
+#define VM_RAM_SIZE (REGISTERS + 3)
 
 void initRMCPU(RM_CPU* cpu) {
-    for (int i = 0; i < REGISTERS; i++) {
-        cpu->r[i] = 0;
-    }
-    
-    cpu->ic = 0;
+    cpu->VMCounter = 0;
 
-    cpu->fr = 0;
+    cpu->offset = -1;
 
     cpu->mode = SUPER;
 
@@ -25,14 +21,50 @@ void initRMCPU(RM_CPU* cpu) {
     cpu->ti = 0;
 }
 
-void mountVM(RM* rm, VM* vm) {
-    *(rm->cpu->ic) = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE];
-    
-    rm->cpu->fr = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE + WORD_SIZE - 1];
-    
+void mountVM(RM* rm, int vmID) {
     for (int i = 0; i < REGISTERS; i++) {
-        rm->cpu->r[i] = rm->memory->supervizorMemory[vm->id * VM_RAM_SIZE * PAGE_SIZE * WORD_SIZE + 4 + i];
+        rm->cpu->r[i] = rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + i];
+    }
+    
+    uintptr_t ic_addr;
+    memcpy(&ic_addr,&rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS], sizeof(uintptr_t));
+    rm->cpu->ic = (uint8_t *)ic_addr;
+
+    rm->cpu->offset = rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t)];
+
+    rm->cpu->fr = rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t) + 1];
+
+    rm->cpu->mountedVMID = vmID;
+}
+
+void unmountVM(RM* rm) {
+    int vmID = rm->cpu->mountedVMID;
+
+    for (int i = 0; i < REGISTERS; i++) {
+        rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + i] = rm->cpu->r[i];
     }
 
-    rm->cpu->mountedVMID = vm->id;
+    uintptr_t ic_addr = (uintptr_t)rm->cpu->ic;
+    memcpy(&rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS], &ic_addr, sizeof(uintptr_t));
+
+    rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t)] = rm->cpu->offset;
+
+    rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t) + 1] = rm->cpu->fr;
+
+    rm->cpu->mountedVMID = -1;
+}
+
+void addNewVM(RM* rm, int vmID) {
+    for (int i = 0; i < REGISTERS; i++) {
+        rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + i] = 0;
+    }
+
+     uint8_t *ic_start = rm->memory->userMemory + ((vmID * TOTAL_MEMORY_SIZE) + DATA_MEMORY) * PAGE_TOTAL_WORDS * WORD_SIZE;
+
+    uintptr_t ic_addr = (uintptr_t)ic_start;
+    memcpy(&rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS], &ic_addr, sizeof(uintptr_t));
+
+    rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t)] = 0; // offset
+
+    rm->memory->supervizorMemory[vmID * VM_RAM_SIZE + REGISTERS + sizeof(uintptr_t) + 1] = 0; // fr
 }

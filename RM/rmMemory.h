@@ -6,7 +6,7 @@
 #define SUPERVIZOR_MEMORY_SIZE 256
 #define SHARED_MEMORY 1
 
-typedef struct{
+typedef struct RM_Memory {
     uint8_t userMemory[USER_MEMORY_SIZE*WORD_SIZE*PAGE_SIZE];
     uint8_t supervizorMemory[SUPERVIZOR_MEMORY_SIZE*WORD_SIZE*PAGE_SIZE];
     uint8_t sharedMemory[SHARED_MEMORY*WORD_SIZE*PAGE_SIZE];
