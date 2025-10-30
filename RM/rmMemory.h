@@ -3,7 +3,7 @@
 #include <stdint.h>
 #define WORD_SIZE 4
 #define PAGE_SIZE 16
-#define USER_MEMORY_SIZE (256 * 2)
+#define USER_MEMORY_SIZE 256
 #define SUPERVIZOR_MEMORY_SIZE 256
 #define SHARED_MEMORY 1
 
