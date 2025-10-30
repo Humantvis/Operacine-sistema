@@ -22,7 +22,10 @@ int main() {
     RM* rm = malloc(sizeof(RM));
     initRM(rm, rmCpu, rmMemory, channel);
 
-    parse(rm, "code.txt", 0);
+    if(parse(rm, "code.txt", 0) == -1) {
+        destroyRM(rm);
+        return -1;
+    }
 
     VM* vm = createVM(rm, 0);
 
@@ -41,8 +44,11 @@ int main() {
 }
 
 VM* createVM(RM* rm, int id) {
+    if(rm->cpu->VMs[id]) {
+        return NULL;
+    }
     VM_Memory* vmMemory = malloc(sizeof(VM_Memory));
-    initializeVirtualMemory(vmMemory, rm->memory->userMemory + rm->cpu->VMCounter * TOTAL_MEMORY_SIZE);
+    initializeVirtualMemory(vmMemory, rm->memory->userMemory + id * TOTAL_MEMORY_SIZE);
 
     VM_CPU* cpu = malloc(sizeof(VM_CPU));
     initVMCPU(cpu, rm);
@@ -51,8 +57,6 @@ VM* createVM(RM* rm, int id) {
     initVM(rm, vm, cpu, vmMemory, id);
 
     addNewVM(rm, id);
-
-    rm->cpu->VMCounter++;
 
     return vm;
 }

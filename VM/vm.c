@@ -4,9 +4,11 @@ uint8_t readOpCode(VM* vm, RM* rm);
 
 uint8_t readRegister(VM* vm, RM* rm);
 
-uint8_t* readCodeAddress(VM* vm, RM* rm);
-
 uint8_t* readMemoryAddress(VM* vm, RM* rm);
+
+void jump(VM* vm, RM* rm);
+
+void noJump(VM* vm, RM* rm);
 
 void initVM(RM* rm, VM* vm, VM_CPU* cpu, VM_Memory* memory, int id) {
     vm->rm = rm;
@@ -101,15 +103,17 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
 
-            int result = getRegister(vm, x) * getRegister(vm, y);
-            setRegister(vm, z, result);
-            setRegister(vm, w, result); // TODO: check if this logic is correct
+            uint16_t a = getRegister(vm, x);
+            uint16_t b = getRegister(vm, y);
+            uint16_t result = a * b;
+
+            setRegister(vm, z, result & 0xFF);
+            setRegister(vm, w, (result >> 8) & 0xFF);
 
             snprintf(message, sizeof(message),
-                "MUL: R%d = R%d * R%d -> R%d = %d * %d\n",
-                z, x, y, z, getRegister(vm, x), getRegister(vm, y));
-
+            "MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
             outputchannel(rm->channelDevice, message);
+
             break;
         }
 
@@ -140,15 +144,14 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
         case CMPxy: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
-            int fr = getFr(vm);
-
-            if (getRegister(vm, x) == getRegister(vm, y)) {
-                setFr(vm, fr | FLAG_ZF);
-            } else if (getRegister(vm, x) < getRegister(vm, y)) {
-                setFr(vm, fr | FLAG_SF);
+            
+            if(getRegister(vm, x) == getRegister(vm, y)) {
+                setFr(vm, getFr(vm) | FLAG_ZF);
+            } else if(getRegister(vm, x) < getRegister(vm, y)) {
+                setFr(vm, getFr(vm) | FLAG_SF);
             } else {
-                setFr(vm, fr & ~FLAG_SF);
-                setFr(vm, fr & ~FLAG_ZF);
+                setFr(vm, getFr(vm) & ~FLAG_SF);
+                setFr(vm, getFr(vm) & ~FLAG_ZF);
             }
 
             snprintf(message, sizeof(message),
@@ -161,6 +164,7 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
         case MRxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
+            
             setRegister(vm, z, *xy);
 
             snprintf(message, sizeof(message),
@@ -174,6 +178,7 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
         case MWxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
+            
             *xy = getRegister(vm, z);
 
             snprintf(message, sizeof(message),
@@ -206,76 +211,83 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
             break;
 
         case JMPxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
-            setIc(vm, xy);
+            jump(vm, rm);
+            
             snprintf(message, sizeof(message),
-                "JMP: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JMP: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
+            
             break;
         }
 
         case JExy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_ZF) == FLAG_ZF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JE: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JE: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
 
         case JGxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) == 0) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JG: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JG: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
 
         case JLxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_SF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JL: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JL: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
 
         case JLExy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if ((getFr(vm) & FLAG_SF) || (getFr(vm) & FLAG_ZF)) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JLE: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JLE: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
 
         case JCxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (getFr(vm) & FLAG_CF) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JC: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JC: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
 
         case JNCxy: {
-            uint8_t* xy = readCodeAddress(vm, rm);
             if (!(getFr(vm) & FLAG_CF)) {
-                setIc(vm, xy);
+                jump(vm, rm);
+            } else{
+                noJump(vm, rm);
             }
             snprintf(message, sizeof(message),
-                "JNC: IC = %ld\n", xy - vm->memory->codeMemory);
+                "JNC: IC = %d\n", getIc(vm));
             outputchannel(rm->channelDevice, message);
             break;
         }
@@ -327,20 +339,44 @@ uint8_t readRegister(VM* vm, RM* rm) {
     return reg;
 }
 
-uint8_t* readCodeAddress(VM* vm, RM* rm) {
-    uint8_t address = (((*getIc(vm) << getOffset(vm)) | ((*(getIc(vm) + 1)) >> (8 - getOffset(vm)))) & 0b11111111);
-
-    setIc(vm, getIc(vm) + 1);
-
-    return vm->memory->codeMemory + address;
-}
-
 uint8_t* readMemoryAddress(VM* vm, RM* rm) {
     uint8_t address = (((*getIc(vm) << getOffset(vm)) | ((*(getIc(vm) + 1)) >> (8 - getOffset(vm)))) & 0b11111111);
 
     setIc(vm, getIc(vm) + 1);
 
     return vm->memory->dataMemory + address;
+}
+
+void jump(VM* vm, RM* rm) {
+    uint8_t jumpLocation;
+
+    if (getOffset(vm) <= 3) {
+        jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+    } else {
+        jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+    }
+
+    size_t base_index = CODE_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE - jumpLocation * 9;
+
+    uint64_t addr_val = 0;
+    for (int i = 0; i < 8; i++) {
+        addr_val |= ((uint64_t)*(vm->memory->codeMemory + base_index + i)) << (i * 8);
+    }
+
+    uint8_t* jumpAddress = (uint8_t*)(uintptr_t)addr_val;
+
+    uint8_t storedOffset = *(vm->memory->codeMemory + base_index + 8);
+    setOffset(vm, storedOffset);
+
+    setIc(vm, jumpAddress);
+}
+
+void noJump(VM* vm, RM* rm) {
+    setOffset(vm, getOffset(vm) + 4);
+    if(getOffset(vm) >= 8) {
+        setOffset(vm, getOffset(vm) % 8);
+        setIc(vm, getIc(vm) + 1);
+    }
 }
 
 bool allowedToRun(RM* rm, VM* vm) {
