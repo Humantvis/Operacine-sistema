@@ -16,6 +16,7 @@ enum {
 };
 
 #define REGISTERS 16
+#define BUFFER_SIZE 64
 
 typedef struct RM_CPU {
     bool VMs[USER_MEMORY_SIZE / (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY)];
@@ -29,6 +30,10 @@ typedef struct RM_CPU {
     uint8_t pi;
     uint8_t si;
     uint8_t ti;
+<<<<<<< Updated upstream
+=======
+    uint8_t buffer[BUFFER_SIZE];
+>>>>>>> Stashed changes
 } RM_CPU;
 
 void initRMCPU(RM_CPU* cpu);

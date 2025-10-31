@@ -26,6 +26,11 @@ int main() {
 
     mountVM(rm, 0);
 
+<<<<<<< Updated upstream
+=======
+    //debug(rm, vm, channel);
+
+>>>>>>> Stashed changes
     runVM(rm, vm);
 
     unmountVM(rm);

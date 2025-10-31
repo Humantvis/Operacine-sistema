@@ -7,7 +7,6 @@
 #include "../RM/rm.h"
 
 #include<stdlib.h>
-#include<stdbool.h>
 
 #include <stdio.h>
 
@@ -30,9 +29,9 @@ void destroyVM(VM* vm);
 
 void runVM(RM* rm, VM* vm);
 
-void executeInstruction(VM* vm, uint8_t instruction, RM* rm);
+void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute);
 
-bool allowedToRun(RM* rm, VM* vm);
+int allowedToRun(RM* rm, VM* vm);
 
 enum opCodes{
     //0:
