@@ -17,7 +17,7 @@ void resetChannelDevice(Channel_device* channelDevice) {
     channelDevice->dt = 0;
 }
 int inputchannel(Channel_device* channelDevice) {
-    printf("Input (numbers 0-255, separated by space, Enter to finish):\n");
+    printf("Input:\n");
 
     // Clear buffer first
     for (int i = 0; i < BUFFER_SIZE; i++) {

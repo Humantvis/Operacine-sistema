@@ -31,8 +31,6 @@ int main() {
 
     mountVM(rm, 0);
 
-    debug(rm, vm, channel);
-
     runVM(rm, vm);
     
     unmountVM(rm);
