@@ -118,5 +118,5 @@ void debug(RM* rm, VM* vm, Channel_device* channelDevice) {
 
             break;
         }
-            }
-        }
+    }
+}

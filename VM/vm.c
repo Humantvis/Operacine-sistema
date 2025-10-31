@@ -28,6 +28,7 @@ void destroyVM(VM* vm) {
 }
 
 void runVM(RM* rm, VM* vm) {
+    int first = 1;
     debug(rm, vm, rm->channelDevice);
     while (allowedToRun(rm, vm)==1) {
         int action = rm->cpu->buffer[0];
@@ -43,10 +44,12 @@ void runVM(RM* rm, VM* vm) {
             else {
                 executeInstruction(vm, instruction, rm, 1);
             }
-        }
-        else
-        {
-            debug(rm, vm, rm ->channelDevice);
+        } else {
+            if(first == 1) {
+                first = 0;
+            } else {
+                debug(rm, vm, rm ->channelDevice);
+            }
             uint8_t instruction = readOpCode(vm, rm);
     
             if(instruction == HALT) {
@@ -56,6 +59,7 @@ void runVM(RM* rm, VM* vm) {
             else {
                 executeInstruction(vm, instruction, rm, 1);
             }
+
             //next command
             uint8_t* tempIc = getIc(vm);
             uint8_t tempOffset = getOffset(vm);
