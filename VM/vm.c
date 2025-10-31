@@ -579,7 +579,7 @@ uint8_t* readMemoryAddress(VM* vm, RM* rm) {
 
 void jump(VM* vm, RM* rm, uint8_t jumpLocation) {
 
-    size_t base_index = CODE_MEMORY * PAGE_TOTAL_WORDS * WORD_SIZE - jumpLocation * 9;
+    size_t base_index = CODE_MEMORY * PAGE_SIZE - jumpLocation * 9;
 
     uint64_t addr_val = 0;
     for (int i = 0; i < 8; i++) {

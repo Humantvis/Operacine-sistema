@@ -12,6 +12,5 @@ enum Actions {
     RUN_FULL,
     STEP,
     REGISTER_VALUES,
-    RM_MEM,
     VM_MEM
 };

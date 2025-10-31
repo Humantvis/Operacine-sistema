@@ -72,7 +72,7 @@ void addNewVM(RM* rm, int vmID) {
         *(rm->memory->supervizorMemory + vmID * VM_RAM_SIZE + i) = 0;
     }
 
-     uint8_t *ic_start = rm->memory->userMemory + ((vmID * TOTAL_MEMORY_SIZE) + DATA_MEMORY) * PAGE_TOTAL_WORDS * WORD_SIZE;
+     uint8_t *ic_start = rm->memory->userMemory + ((vmID * TOTAL_MEMORY_SIZE) + DATA_MEMORY) * PAGE_SIZE;
 
     uintptr_t ic_addr = (uintptr_t)ic_start;
     memcpy((rm->memory->supervizorMemory + vmID * VM_RAM_SIZE + REGISTERS), &ic_addr, sizeof(uintptr_t));
