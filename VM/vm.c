@@ -28,16 +28,7 @@ void destroyVM(VM* vm) {
 }
 
 void runVM(RM* rm, VM* vm) {
-<<<<<<< Updated upstream
-    while (allowedToRun(rm, vm)) {
-        uint8_t instruction = readOpCode(vm, rm);
-        if(instruction == HALT) {
-            printf("HALT\n");
-            break;
-        } else {
-            executeInstruction(vm, instruction, rm);
-=======
-    debug(rm, vm, rm ->channelDevice);
+    debug(rm, vm, rm->channelDevice);
     while (allowedToRun(rm, vm)==1) {
         int action = rm->cpu->buffer[0];
 
@@ -77,20 +68,14 @@ void runVM(RM* rm, VM* vm) {
             }
             setIc(vm, tempIc);
             setOffset(vm, tempOffset);
->>>>>>> Stashed changes
         }
     }
 }
 
-<<<<<<< Updated upstream
-void executeInstruction(VM* vm, uint8_t instruction, RM* rm) {
-    switch(instruction) {
-=======
 void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
     char message[256]; // reusable buffer for all messages
 
     switch (instruction) {
->>>>>>> Stashed changes
         case ADDxyz: {
             uint8_t x = readRegister(vm, rm);
             uint8_t y = readRegister(vm, rm);
@@ -112,11 +97,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                 outputchannel(rm->channelDevice, message);
             }
 
-<<<<<<< Updated upstream
-            printf("ADD: R%d = R%d + R%d -> R%d = %d + %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
-
-=======
->>>>>>> Stashed changes
             break;
         }
         case SUBxyz: {
@@ -126,10 +106,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
 
             setRegister(vm, z, getRegister(vm, x) - getRegister(vm, y));
 
-<<<<<<< Updated upstream
-            printf("SUB: R%d = R%d - R%d -> R%d = %d - %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
-
-=======
             if (execute == 1){
                 snprintf(message, sizeof(message),
                     "SUB: R%d = R%d - R%d -> R%d = %d - %d\n",
@@ -144,7 +120,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
 
                 outputchannel(rm->channelDevice, message);
             }
->>>>>>> Stashed changes
             break;
         }
         case MULxyzw: {
@@ -161,9 +136,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                 setRegister(vm, z, result & 0xFF);
                 setRegister(vm, w, (result >> 8) & 0xFF);
 
-<<<<<<< Updated upstream
-            printf("MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
-=======
                 snprintf(message, sizeof(message),
                 "MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
                 outputchannel(rm->channelDevice, message);
@@ -173,7 +145,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                 "Next intruction: MUL R%d R%d R%d R%d\n", x, y, z, w);
                 outputchannel(rm->channelDevice, message);
             }
->>>>>>> Stashed changes
 
             break;
         }
@@ -183,13 +154,9 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             uint8_t z = readRegister(vm, rm);
             uint8_t w = readRegister(vm, rm);
 
-            setRegister(vm, z, getRegister(vm, x) / getRegister(vm, y));
-            setRegister(vm, w, getRegister(vm, x) % getRegister(vm, y));
+            int dividend = getRegister(vm, x);
+            int divisor = getRegister(vm, y);
 
-<<<<<<< Updated upstream
-            printf("DIV: R%d = R%d / R%d -> R%d = %d / %d,   R%d = R%d %% R%d -> R%d = %d %% %d\n", z, x, y, z, getRegister(vm, z), getRegister(vm, x), w, x, y, getRegister(vm, w), getRegister(vm, x), getRegister(vm, y));
-            
-=======
             if (execute == 1) {
                 if (divisor == 0) {
                     snprintf(message, sizeof(message), "DIV ERROR: Division by zero!\n");
@@ -209,7 +176,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: DIV R%d R%d R%d R%d\n", x, y, z, w);
                     outputchannel(rm->channelDevice, message);
             }
->>>>>>> Stashed changes
             break;
         }
         case CMPxy: {
@@ -231,29 +197,16 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
     
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("CMP: R%d cmp R%d -> FR = %d\n", x, y, getFr(vm));
-            
-=======
         else {
                 snprintf(message, sizeof(message),
                     "Next instruction: CMP R%d R%d \n", x, y);
                 outputchannel(rm->channelDevice, message);
         }
->>>>>>> Stashed changes
             break;
         }
         case MRxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
-<<<<<<< Updated upstream
-            
-            setRegister(vm, z, *xy);
-            
-            printf("MR: R%d = M[%d] -> R%d = %d\n", z, xy - vm->memory->dataMemory, z, *xy);
-            
-=======
 
             if (execute == 1) {
                 setRegister(vm, z, *xy);
@@ -271,45 +224,12 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
     
                 outputchannel(rm->channelDevice, message);
             }
->>>>>>> Stashed changes
             break;
         }
         case MWxyz: {
             uint8_t* xy = readMemoryAddress(vm, rm);
             uint8_t z = readRegister(vm, rm);
             
-<<<<<<< Updated upstream
-            *xy = getRegister(vm, z);
-            
-            printf("MW: M[%d] = R%d -> M[%d] = %d\n", xy - vm->memory->dataMemory, z, xy - vm->memory->dataMemory, getRegister(vm, z));
-            
-            break;
-        }
-        case SMRxyz: {
-            //not needed yet
-            printf("SMR: not implemented yet\n");
-            break;
-        }
-        case SMWxyz: {
-            //not needed yet
-            printf("SMW: not implemented yet\n");
-            break;
-        }
-        case WAIT: {
-            //semaphores are not needed yet
-            printf("WAIT: not implemented yet\n");
-            break;
-        }
-        case SIGNAL: {
-            //semaphores are not needed yet
-            printf("SIGNAL: not implemented yet\n");
-            break;
-        }
-        case JMPxy: {
-            jump(vm, rm);
-            
-            printf("JMP: IC = %d\n", getIc(vm));
-=======
             if (execute == 1) {
                 *xy = getRegister(vm, z);
                 snprintf(message, sizeof(message),
@@ -405,7 +325,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JMP %x \n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
->>>>>>> Stashed changes
             
             break;
         }
@@ -433,12 +352,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JE %x\n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JE: IC = %d\n", getIc(vm));
-            
-=======
->>>>>>> Stashed changes
             break;
         }
         case JGxy: {
@@ -465,12 +378,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JG %x \n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JG: IC = %d\n", getIc(vm));
-            
-=======
->>>>>>> Stashed changes
             break;
         }
         case JLxy: {
@@ -497,12 +404,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "JL %x\n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JL: IC = %d\n", getIc(vm));
-            
-=======
->>>>>>> Stashed changes
             break;
         }
         case JLExy: {
@@ -529,12 +430,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JLE %x\n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JLE: IC = %d\n", getIc(vm));
-            
-=======
->>>>>>> Stashed changes
             break;
         }
         case JCxy: {
@@ -560,12 +455,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JC %x \n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JC: IC = %d\n", getIc(vm));
-            
-=======
->>>>>>> Stashed changes
             break;
         }
         case JNCxy: {
@@ -592,24 +481,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                     "Next instruction: JNC %x\n", jumpLocation);
                 outputchannel(rm->channelDevice, message);
             }
-<<<<<<< Updated upstream
-            
-            printf("JNC: IC = %d\n", getIc(vm));
-            
-            break;
-        }
-        case DMARx: {
-            //not needed yet
-            printf("DMAR: not implemented yet\n");
-            break;
-        }
-        case DMAWx: {
-            //not needed yet
-            printf("DMAW: not implemented yet\n");
-            break;
-        }
-    }
-=======
             break;
         }
 
@@ -658,7 +529,6 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
     }    
->>>>>>> Stashed changes
 }
 
 uint8_t readOpCode(VM* vm, RM* rm) {
@@ -727,12 +597,11 @@ void noJump(VM* vm, RM* rm) {
         setIc(vm, getIc(vm) + 1);
     }
 }
-/**/
+
 int allowedToRun(RM* rm, VM* vm) {
     if  (rm->cpu->mountedVMID == vm->id)
     {
         return 1;
     }
     else return 0;
-
 }

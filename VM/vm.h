@@ -7,8 +7,11 @@
 #include "../RM/rm.h"
 
 #include<stdlib.h>
+#include<stdbool.h>
 
 #include <stdio.h>
+#include "debug.h"
+#include "../RM/channelDevice.h"
 
 #define FLAG_SF 0b00000001  // Sign flag
 #define FLAG_ZF 0b00000010  // Zero flag

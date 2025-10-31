@@ -31,10 +31,7 @@ void initRMCPU(RM_CPU* cpu) {
     cpu->si = 0;
     
     cpu->ti = 0;
-<<<<<<< Updated upstream
-=======
     
->>>>>>> Stashed changes
 }
 
 void mountVM(RM* rm, int vmID) {
