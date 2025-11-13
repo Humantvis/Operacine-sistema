@@ -1,4 +1,7 @@
 #include "debug.h"
+
+void dump_vm_memory(VM* vm);
+
 void debug(RM* rm, VM* vm, Channel_device* channelDevice) {
 
     outputchannel(channelDevice, "0-run full program\n");
@@ -54,7 +57,25 @@ void debug(RM* rm, VM* vm, Channel_device* channelDevice) {
 
             outputchannel(channelDevice, "\n");
 
+            dump_vm_memory(vm);
+
             break;
         }
+    }
+}
+
+void dump_vm_memory(VM* vm) {
+    uint8_t* mem = vm->memory->dataMemory;  // start of VM memory
+    size_t total = TOTAL_MEMORY_SIZE;       // in bytes
+
+    printf("=== VM MEMORY DUMP ===\n");
+
+    for (size_t i = 0; i < total; i += 16) {
+        printf("%08zx : ", i);
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < total)
+                printf("%02x ", mem[i + j]);
+        }
+        printf("\n");
     }
 }

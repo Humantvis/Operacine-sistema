@@ -96,7 +96,7 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             }
             else {
                 snprintf(message, sizeof(message),
-                    "Next instrution: ADD R%d R%d R%d \n",
+                    "Next instruction: ADD R%d R%d R%d \n",
                     x, y, z);
                 outputchannel(rm->channelDevice, message);
             }
@@ -146,7 +146,7 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             }
             else {
                 snprintf(message, sizeof(message),
-                "Next intruction: MUL R%d R%d R%d R%d\n", x, y, z, w);
+                "Next instruction: MUL R%d R%d R%d R%d\n", x, y, z, w);
                 outputchannel(rm->channelDevice, message);
             }
 

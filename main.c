@@ -22,14 +22,14 @@ int main() {
     RM* rm = malloc(sizeof(RM));
     initRM(rm, rmCpu, rmMemory, channel);
 
-    if(parse(rm, "code.txt", 0) == -1) {
+    if(parse(rm, "code.txt", 1) == -1) {
         destroyRM(rm);
         return -1;
     }
 
-    VM* vm = createVM(rm, 0);
+    VM* vm = createVM(rm, 1);
 
-    mountVM(rm, 0);
+    mountVM(rm, 1);
 
     runVM(rm, vm);
     

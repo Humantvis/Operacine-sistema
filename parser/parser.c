@@ -38,7 +38,7 @@ int parse(RM *rm, const char *filename, int nr) {
         return 1;
     }
     
-    *address = rm->memory->userMemory + nr * TOTAL_MEMORY_SIZE * PAGE_WORDS * WORD_SIZE + DATA_MEMORY * PAGE_WORDS * WORD_SIZE;
+    *address = rm->memory->userMemory + nr * TOTAL_MEMORY_SIZE + DATA_MEMORY * PAGE_WORDS * WORD_SIZE;
 
     uint8_t* offset = malloc(sizeof(int));
     if (offset == NULL) {
@@ -98,7 +98,7 @@ int parse(RM *rm, const char *filename, int nr) {
             if(strchr(codeStart, ':') && sscanf(codeStart, "%x:", &jumpLocation) == 1) {
                 if(jumpLocation >= 0 && jumpLocation < 16) {
                     uint64_t addr_val = (uint64_t)(uintptr_t)*address;
-                    size_t base_index = nr * TOTAL_MEMORY_SIZE * PAGE_WORDS * WORD_SIZE + (DATA_MEMORY + CODE_MEMORY) * PAGE_WORDS * WORD_SIZE - jumpLocation * 9;
+                    size_t base_index = nr * TOTAL_MEMORY_SIZE + (DATA_MEMORY + CODE_MEMORY) * PAGE_WORDS * WORD_SIZE - jumpLocation * 9;
 
                     for (int i = 0; i < 8; i++) {
                         *(rm->memory->userMemory + base_index + i) = (addr_val >> (i * 8)) & 0b11111111;

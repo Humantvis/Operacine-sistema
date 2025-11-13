@@ -1,7 +1,7 @@
 #pragma once
 #include <stdlib.h>
 #include <stdint.h>
-#define USER_MEMORY_SIZE 256
+#define USER_MEMORY_SIZE (256 * 16)
 #define SUPERVIZOR_MEMORY_SIZE 256
 #define SHARED_MEMORY 1
 

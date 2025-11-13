@@ -3,7 +3,7 @@
 #include "rm.h"
 #include "../VM/vm.h"
 
-#define VM_RAM_SIZE (REGISTERS + 3)
+#define VM_RAM_SIZE (REGISTERS + sizeof(uintptr_t) + 2)
 
 void initRMCPU(RM_CPU* cpu) {
     for (int i = 0; i < USER_MEMORY_SIZE / (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY); i++) {
@@ -72,7 +72,7 @@ void addNewVM(RM* rm, int vmID) {
         *(rm->memory->supervizorMemory + vmID * VM_RAM_SIZE + i) = 0;
     }
 
-     uint8_t *ic_start = rm->memory->userMemory + ((vmID * TOTAL_MEMORY_SIZE) + DATA_MEMORY) * PAGE_SIZE;
+     uint8_t *ic_start = rm->memory->userMemory + vmID * TOTAL_MEMORY_SIZE + DATA_MEMORY * PAGE_SIZE;
 
     uintptr_t ic_addr = (uintptr_t)ic_start;
     memcpy((rm->memory->supervizorMemory + vmID * VM_RAM_SIZE + REGISTERS), &ic_addr, sizeof(uintptr_t));
