@@ -10,10 +10,9 @@ void jump(VM* vm, RM* rm, uint8_t jumpLocation);
 
 void noJump(VM* vm, RM* rm);
 
-void initVM(RM* rm, VM* vm, VM_CPU* cpu, VM_Memory* memory, int id) {
+void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id) {
     vm->rm = rm;
     vm->cpu = cpu;
-    vm->memory = memory;
     vm->id = id;
 }
 
@@ -23,15 +22,13 @@ void destroyVM(VM* vm) {
     }
 
     free(vm->cpu);
-    free(vm->memory);
     free(vm);
 }
 
 void runVM(RM* rm, VM* vm) {
-    int first = 1;
     debug(rm, vm, rm->channelDevice);
-    while (allowedToRun(rm, vm)==1) {
-        int action = rm->cpu->buffer[0];
+    while (allowedToRun(rm, vm) == 1) {
+        int action = rm->memory->supervisorMemory->buffer[0];
 
         if (action == 0) {
 
@@ -45,9 +42,7 @@ void runVM(RM* rm, VM* vm) {
                 executeInstruction(vm, instruction, rm, 1);
             }
         } else {
-            if(first == 1) {
-                first = 0;
-            } else {
+            if(getIc(vm) != 0) {
                 debug(rm, vm, rm ->channelDevice);
             }
             uint8_t instruction = readOpCode(vm, rm);
@@ -55,13 +50,12 @@ void runVM(RM* rm, VM* vm) {
             if(instruction == HALT) {
                 outputchannel(rm->channelDevice, "HALT");
                 break;
-            } 
-            else {
+            } else {
                 executeInstruction(vm, instruction, rm, 1);
             }
 
             //next command
-            uint8_t* tempIc = getIc(vm);
+            uint8_t tempIc = getIc(vm);
             uint8_t tempOffset = getOffset(vm);
             instruction = readOpCode(vm, rm);
             if(instruction == HALT) {
@@ -141,12 +135,14 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
                 setRegister(vm, w, (result >> 8) & 0xFF);
 
                 snprintf(message, sizeof(message),
-                "MUL: R%d = R%d * R%d -> R%d = %d * %d\n", z, x, y, z, getRegister(vm, x), getRegister(vm, y));
+                    "MUL: R%d = R%d * R%d -> R%d = %d * %d\n",
+                    z, x, y, z, getRegister(vm, x), getRegister(vm, y));
                 outputchannel(rm->channelDevice, message);
             }
             else {
                 snprintf(message, sizeof(message),
-                "Next instruction: MUL R%d R%d R%d R%d\n", x, y, z, w);
+                    "Next instruction: MUL R%d R%d R%d R%d\n",
+                    x, y, z, w);
                 outputchannel(rm->channelDevice, message);
             }
 
@@ -215,18 +211,18 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             if (execute == 1) {
                 setRegister(vm, z, *xy);
     
-                snprintf(message, sizeof(message),
-                    "MR: R%d = M[%ld] -> R%d = %d\n",
-                    z, xy - vm->memory->dataMemory, z, *xy);
+                // snprintf(message, sizeof(message),
+                //     "MR: R%d = M[%ld] -> R%d = %d\n",
+                //     z, xy - vm->memory->dataMemory, z, *xy);
     
-                outputchannel(rm->channelDevice, message);
+                // outputchannel(rm->channelDevice, message);
             }
             else {
-                snprintf(message, sizeof(message),
-                    "Next instruction: MR %1d R%d \n",
-                    xy - vm->memory->dataMemory, z);
+                // snprintf(message, sizeof(message),
+                //     "Next instruction: MR %1d R%d \n",
+                //     xy - vm->memory->dataMemory, z);
     
-                outputchannel(rm->channelDevice, message);
+                // outputchannel(rm->channelDevice, message);
             }
             break;
         }
@@ -236,19 +232,19 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             
             if (execute == 1) {
                 *xy = getRegister(vm, z);
-                snprintf(message, sizeof(message),
-                    "MW: M[%ld] = R%d -> M[%ld] = %d\n",
-                    xy - vm->memory->dataMemory, z,
-                    xy - vm->memory->dataMemory, getRegister(vm, z));
+                // snprintf(message, sizeof(message),
+                //     "MW: M[%ld] = R%d -> M[%ld] = %d\n",
+                //     xy - vm->memory->dataMemory, z,
+                //     xy - vm->memory->dataMemory, getRegister(vm, z));
     
-                outputchannel(rm->channelDevice, message);
+                // outputchannel(rm->channelDevice, message);
             }
             else {
-                snprintf(message, sizeof(message),
-                    "Next instruction: MW %ld R%d\n",
-                    xy - vm->memory->dataMemory, z);
+                // snprintf(message, sizeof(message),
+                //     "Next instruction: MW %ld R%d\n",
+                //     xy - vm->memory->dataMemory, z);
     
-                outputchannel(rm->channelDevice, message);
+                // outputchannel(rm->channelDevice, message);
             }
             break;
         }
@@ -307,13 +303,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
         }
 
         case JMPxy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
 
             if (execute == 1)
             {
@@ -333,13 +339,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JExy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
 
             if (execute == 1) {
                 if ((getFr(vm) & FLAG_ZF) == FLAG_ZF) {
@@ -359,13 +375,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JGxy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
             
             if (execute == 1) {
                 if ((getFr(vm) & FLAG_SF) == 0) {
@@ -385,13 +411,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JLxy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
 
             if (execute == 1) {
                 if (getFr(vm) & FLAG_SF) {
@@ -411,13 +447,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JLExy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
 
             if (execute == 1) {
                 if ((getFr(vm) & FLAG_SF) || (getFr(vm) & FLAG_ZF)) {
@@ -437,13 +483,24 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JCxy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
+
             if (execute == 1) {
                 if (getFr(vm) & FLAG_CF) {
                     jump(vm, rm, jumpLocation);
@@ -462,13 +519,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
             break;
         }
         case JNCxy: {
+            int page = getIc(vm) / PAGE_SIZE;
+    
+            uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+            uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+            uint8_t first = 0;
+            uint8_t second = 0;
             uint8_t jumpLocation;
 
-            if (getOffset(vm) <= 3) {
-                jumpLocation = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+            if(getOffset(vm) <= 3) {
+                first = (*phys0 >> (4 - getOffset(vm)));
             } else {
-                jumpLocation = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+                first = (*phys0 << (getOffset(vm) - 4));
+                second = (*phys1 >> (12 - getOffset(vm)));
             }
+
+            jumpLocation = (first | second) & 0b00001111;
 
             if (execute == 1) {
                 if (!(getFr(vm) & FLAG_CF)) {
@@ -491,10 +558,10 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
         case DMARx: {
             uint8_t* x = readMemoryAddress(vm, rm);  // pointer to memory
             if (execute == 1) {
-                inputchannel(rm->channelDevice);  // fills rm->cpu->buffer[64]
+                inputchannel(rm->channelDevice);  // fills rm->memory->supervisorMemory->buffer[64]
 
                 for (int i = 0; i < 64; i++) {
-                    x[i] = rm->cpu->buffer[i];
+                    x[i] = rm->memory->supervisorMemory->buffer[i];
                 }
 
                 snprintf(message, sizeof(message),
@@ -536,12 +603,23 @@ void executeInstruction(VM* vm, uint8_t instruction, RM* rm, int execute) {
 }
 
 uint8_t readOpCode(VM* vm, RM* rm) {
+    int page = getIc(vm) / PAGE_SIZE;
+    
+    uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+    uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+    uint8_t first = 0;
+    uint8_t second = 0;
     uint8_t instruction;
+    
     if(getOffset(vm) <= 3) {
-        instruction = (*getIc(vm) >> (3 - getOffset(vm))) & 0b00011111;
+        first = (*phys0 >> (3 - getOffset(vm)));
     } else {
-        instruction = ((*getIc(vm) << (getOffset(vm) - 3)) | (*(getIc(vm) + 1) >> (11 - getOffset(vm)))) & 0b00011111;
+        first = (*phys0 << (getOffset(vm) - 3));
+        second = (*phys1 >> (11 - getOffset(vm)));
     }
+
+    instruction = (first | second) & 0b00011111;
 
     setOffset(vm, getOffset(vm) + 5);
     if(getOffset(vm) >= 8) {
@@ -553,46 +631,84 @@ uint8_t readOpCode(VM* vm, RM* rm) {
 }
 
 uint8_t readRegister(VM* vm, RM* rm) {
+    int page = getIc(vm) / PAGE_SIZE;
+    
+    uint8_t* phys0 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + getIc(vm) % PAGE_SIZE;
+    uint8_t* phys1 = rm->pagingDevice->getAddressFromPage(rm->pagingDevice, vm->id, page) + (getIc(vm) + 1) % PAGE_SIZE;
+
+    uint8_t first = 0;
+    uint8_t second = 0;
     uint8_t reg;
+    
     if(getOffset(vm) <= 3) {
-        reg = (*getIc(vm) >> (4 - getOffset(vm))) & 0b00001111;
+        first = (*phys0 >> (4 - getOffset(vm)));
     } else {
-        reg = ((*getIc(vm) << (getOffset(vm) - 4)) | ((*(getIc(vm) + 1)) >> (12 - getOffset(vm)))) & 0b00001111;
+        first = (*phys0 << (getOffset(vm) - 4));
+        second = (*phys1 >> (12 - getOffset(vm)));
     }
+
+    reg = (first | second) & 0b00001111;
 
     setOffset(vm, getOffset(vm) + 4);
     if(getOffset(vm) >= 8) {
         setOffset(vm, getOffset(vm) % 8);
         setIc(vm, getIc(vm) + 1);
     }
-
+    
     return reg;
 }
 
-uint8_t* readMemoryAddress(VM* vm, RM* rm) {
-    uint8_t address = (((*getIc(vm) << getOffset(vm)) | ((*(getIc(vm) + 1)) >> (8 - getOffset(vm)))) & 0b11111111);
-
-    setIc(vm, getIc(vm) + 1);
-
-    return vm->memory->dataMemory + address;
-}
-
 void jump(VM* vm, RM* rm, uint8_t jumpLocation) {
+    size_t vmBase = vm->id * TOTAL_MEMORY_SIZE;
 
-    size_t base_index = CODE_MEMORY * PAGE_SIZE - jumpLocation * 9;
+    size_t jumpTableBase =
+        vmBase + (DATA_MEMORY + CODE_MEMORY) * PAGE_WORDS * WORD_SIZE;
 
-    uint64_t addr_val = 0;
+    size_t entryIndex = jumpTableBase - (jumpLocation * 9);
+
+    uint8_t* entryPtr = rm->memory->userMemory + entryIndex;
+
+    uint64_t icVal = 0;
+
     for (int i = 0; i < 8; i++) {
-        addr_val |= ((uint64_t)*(vm->memory->codeMemory + base_index + i)) << (i * 8);
+        icVal |= ((uint64_t)entryPtr[i]) << (i * 8);
     }
 
-    uint8_t* jumpAddress = (uint8_t*)(uintptr_t)addr_val;
+    uint8_t storedOffset = entryPtr[8];
 
-    uint8_t storedOffset = *(vm->memory->codeMemory + base_index + 8);
+    setIc(vm, (uint16_t)icVal);
     setOffset(vm, storedOffset);
-
-    setIc(vm, jumpAddress);
 }
+
+uint8_t* readMemoryAddress(VM* vm, RM* rm) {
+    uint16_t ic = getIc(vm);
+    int codePage = ic / PAGE_SIZE;
+    int codeOff  = ic % PAGE_SIZE;
+
+    uint8_t* codeBase = rm->pagingDevice->getAddressFromPage(
+                            rm->pagingDevice, vm->id, codePage);
+
+    uint8_t byte0 = codeBase[codeOff];
+    uint8_t byte1 = codeBase[(codeOff + 1) % PAGE_SIZE];
+
+    uint8_t first  = byte0 << getOffset(vm);
+    uint8_t second = byte1 >> (8 - getOffset(vm));
+
+    uint8_t address = (first | second) & 0xFF;
+
+    setIc(vm, getIc(vm) + 1);
+    
+    uint16_t vaddr = address;
+
+    int dataPage = vaddr / PAGE_SIZE;
+    int dataOff  = vaddr % PAGE_SIZE;
+
+    uint8_t* dataBase = rm->pagingDevice->getAddressFromPage(
+                            rm->pagingDevice, vm->id, dataPage);
+
+    return dataBase + dataOff;
+}
+
 
 void noJump(VM* vm, RM* rm) {
     setOffset(vm, getOffset(vm) + 4);
@@ -603,8 +719,7 @@ void noJump(VM* vm, RM* rm) {
 }
 
 int allowedToRun(RM* rm, VM* vm) {
-    if  (rm->cpu->mountedVMID == vm->id)
-    {
+    if  (rm->memory->supervisorMemory->mountedVMID == vm->id) {
         return 1;
     }
     else return 0;

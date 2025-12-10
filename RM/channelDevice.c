@@ -21,7 +21,7 @@ int inputchannel(Channel_device* channelDevice) {
 
     // Clear buffer first
     for (int i = 0; i < BUFFER_SIZE; i++) {
-        channelDevice->cpu->buffer[i] = 0;
+        channelDevice->memory->supervisorMemory->buffer[i] = 0;
     }
 
     char line[512];
@@ -41,7 +41,7 @@ int inputchannel(Channel_device* channelDevice) {
         if (value < 0) value = 0;
         if (value > 255) value = 255;
 
-        channelDevice->cpu->buffer[i] = (uint8_t)value;
+        channelDevice->memory->supervisorMemory->buffer[i] = (uint8_t)value;
         i++;
         token = strtok(NULL, " ");
     }
