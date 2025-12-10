@@ -2,11 +2,11 @@
 
 #include "rmCpu.h"
 #include "rmMemory.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
-#define BUFFER_SIZE 64
+#include "../defines.h"
+
+typedef struct RM_CPU RM_CPU;
+typedef struct RM_Memory RM_Memory;
 
 typedef struct Channel_device {
     uint8_t sb; 

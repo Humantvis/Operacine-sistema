@@ -1,11 +1,10 @@
 #include "rm.h"
 
-#include<stdlib.h>
-
-void initRM(RM* rm, RM_CPU* cpu, RM_Memory* memory, Channel_device* channelDevice) {
+void initRM(RM* rm, RM_CPU* cpu, RM_Memory* memory, Channel_device* channelDevice, PagingDevice* pagingDevice) {
     rm->cpu = cpu;
     rm->memory = memory;
     rm->channelDevice = channelDevice;
+    rm->pagingDevice = pagingDevice;
 }
 
 void destroyRM(RM* rm) {

@@ -1,60 +1,16 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include "VM/vm.h"
-#include "RM/rm.h"
-#include "parser/parser.h"
-#include "VM/debug.h"
-#include "RM/channelDevice.h"
-
-VM* createVM(RM* rm, int id);
-int parse(RM* rm, const char* filename, int offset);
+#include "rm.h"
+#include "vm.h"
+#include "externalMemory.h"
+#include "parser.h"
+#include "debug.h"
 
 int main() {
-    RM_Memory* rmMemory = malloc(sizeof(RM_Memory));
-    initialize_RM_memory(rmMemory);
+    RM rm;
+    initialize_RM(&rm);
 
-    RM_CPU* rmCpu = malloc(sizeof(RM_CPU));
-    initRMCPU(rmCpu);
-    
-    Channel_device* channel = malloc(sizeof(Channel_device));
-    initChannelDevice(channel, rmCpu, rmMemory);
+    initChannelDevice(rm.channelDevice, rm.cpu, rm.memory);
 
-    RM* rm = malloc(sizeof(RM));
-    initRM(rm, rmCpu, rmMemory, channel);
+    free_RM(&rm);
 
-    if(parse(rm, "code.txt", 1) == -1) {
-        destroyRM(rm);
-        return -1;
-    }
-
-    VM* vm = createVM(rm, 1);
-
-    mountVM(rm, 1);
-
-    runVM(rm, vm);
-    
-    unmountVM(rm);
-
-    destroyVM(vm);
-    
-    destroyRM(rm);
     return 0;
-}
-
-VM* createVM(RM* rm, int id) {
-    if(rm->cpu->VMs[id]) {
-        return NULL;
-    }
-    VM_Memory* vmMemory = malloc(sizeof(VM_Memory));
-    initializeVirtualMemory(vmMemory, rm->memory->userMemory + id * TOTAL_MEMORY_SIZE);
-
-    VM_CPU* cpu = malloc(sizeof(VM_CPU));
-    initVMCPU(cpu, rm);
-
-    VM* vm = malloc(sizeof(VM));
-    initVM(rm, vm, cpu, vmMemory, id);
-
-    addNewVM(rm, id);
-
-    return vm;
 }

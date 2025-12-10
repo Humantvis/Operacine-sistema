@@ -1,4 +1,5 @@
 #include "vmCpu.h"
+
 void initVMCPU(VM_CPU* cpu, RM* rm) {
     for (int i = 0; i < REGISTERS; i++) {
         cpu->r[i] = &(rm->cpu->r[i]);
@@ -17,11 +18,11 @@ uint8_t getRegister(VM* vm, int reg) {
     return vm->rm->cpu->r[reg];
 }
 
-void setIc(VM* vm, uint8_t* ic) {
+void setIc(VM* vm, uint16_t ic) {
     vm->rm->cpu->ic = ic;
 }
 
-uint8_t* getIc(VM* vm) {
+uint16_t getIc(VM* vm) {
     return vm->rm->cpu->ic;
 }
 

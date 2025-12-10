@@ -1,30 +1,17 @@
 #pragma once
 
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
+#include "rm.h"
+#include "../VM/vm.h"
 
-#include "rmMemory.h"
-#include "../VM/vmMemory.h"
+#include "../defines.h"
 
 #define BUFFER_SIZE 64
 
 typedef struct RM RM;
-typedef struct VM VM;
-
-enum {
-    SUPER,
-    USER
-};
-
-#define REGISTERS 16
-
 
 typedef struct RM_CPU {
-    bool VMs[USER_MEMORY_SIZE / (DATA_MEMORY + CODE_MEMORY + FREE_MEMORY)];
-    int mountedVMID;
 	uint8_t r[REGISTERS];
-    uint8_t* ic;
+    uint16_t ic;
     int offset;
     uint8_t fr;
     uint8_t mode;
@@ -32,7 +19,6 @@ typedef struct RM_CPU {
     uint8_t pi;
     uint8_t si;
     uint8_t ti;
-    uint8_t buffer[BUFFER_SIZE];
 } RM_CPU;
 
 void initRMCPU(RM_CPU* cpu);

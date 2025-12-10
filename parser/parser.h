@@ -1,13 +1,5 @@
-#include "../RM/rm.h"
-#include "../VM/vm.h"
+#include "../RM/externalMemory.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../defines.h"
 
-enum {
-    DATA,
-    CODE
-};
-
-int parse(RM *rm, const char *filename, int nr);
+int parse(ExternalMemory* externalMemory, const char *filename, int programID);
