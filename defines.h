@@ -81,3 +81,31 @@ enum Actions {
     REGISTER_VALUES,
     VM_MEM
 };
+
+enum ProcessState {
+    RUNNING,
+    READY,
+    BLOCKED,
+    READY_STOP,
+    BLOCKED_STOP
+};
+
+enum ProcessType {
+    T_SYSTEM,
+    T_USER
+};
+
+enum ProgramInterrupt {
+    PI_NONE,
+    PI_INVALID_OPCODE,
+    PI_INVALID_ADDRESS,
+    PI_OVERFLOW,
+    PI_ILLEGAL_ASSIGNMENT
+};
+
+enum SupervisorInterrupt{
+    SI_NONE,
+    SI_GET_DATA,
+    SI_PUT_DATA,
+    SI_HALT
+};
