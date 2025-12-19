@@ -1,16 +1,28 @@
-#include "rm.h"
-#include "vm.h"
-#include "externalMemory.h"
-#include "parser.h"
-#include "debug.h"
+#include "RM/rm.h"
+#include "VM/vm.h"
+#include "RM/externalMemory.h"
+#include "parser/parser.h"
+#include "VM/debug.h"
 
 int main() {
-    RM rm;
-    initialize_RM(&rm);
+    RM_CPU* rm_cpu = malloc(sizeof(RM_CPU));
+    initRMCPU(rm_cpu);
 
-    initChannelDevice(rm.channelDevice, rm.cpu, rm.memory);
+    SupervisorMemory* supervisorMemory = malloc(sizeof(SupervisorMemory));
+    initialize_RM_supervisorMemory(supervisorMemory);
 
-    free_RM(&rm);
+    RM_Memory* memory = malloc(sizeof(RM_Memory));
+    initialize_RM_memory(memory, supervisorMemory);
 
+    Channel_device* channelDevice = malloc(sizeof(Channel_device));
+    initChannelDevice(channelDevice, rm_cpu, memory);
+
+    PagingDevice* pagingDevice = malloc(sizeof(PagingDevice));
+    initPagingDevice(pagingDevice, supervisorMemory);
+
+    RM* rm = malloc(sizeof(RM));
+    initRM(rm, rm_cpu, memory, channelDevice, pagingDevice);
+
+    destroyRM(rm);
     return 0;
 }
