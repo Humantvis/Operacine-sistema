@@ -10,11 +10,11 @@ int main() {
     initializeExternalmemory(externalMemory);
 
     //visos programos cia turi buti parsed
-    for(int i = 0; i < 1; i++) {
+    /*for(int i = 0; i < 1; i++) {
         char*  fileName;
         snprintf(fileName, sizeof(fileName), "%d.txt", i);
         parse(externalMemory, fileName, 0);
-    }
+    }*/
 
     RM_CPU* rm_cpu = malloc(sizeof(RM_CPU));
     initRMCPU(rm_cpu);
@@ -37,7 +37,11 @@ int main() {
     Kernel* kernel = malloc(sizeof(Kernel));
     initKernel(kernel, rm, externalMemory);
 
-    scheduler(kernel);
+    setKernel(rm, kernel);
+    start(kernel);
+
+    
+
 
     destroyRM(rm);
     return 0;

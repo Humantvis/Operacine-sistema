@@ -6,12 +6,16 @@
 #include "jobGovernor.h"
 #include "mainProc.h"
 #include "processList.h"
+#include "process.h"
+#include "startStop.h"
+#include "readFromInterface.h"
+#include "commandInterpreter.h"
 
 typedef struct VM VM;
 typedef struct RM RM;
 
 typedef struct Kernel {
-    VM* runningProcess;
+    Process* runningProcess;
 
     ProcessList* readySystem;
     ProcessList* readyUser;

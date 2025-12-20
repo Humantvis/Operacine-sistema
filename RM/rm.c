@@ -18,3 +18,6 @@ void destroyRM(RM* rm) {
     free(rm->memory);
     free(rm);
 }
+void setKernel(RM* rm, Kernel* kernel) {
+    rm->kernel = kernel;
+}

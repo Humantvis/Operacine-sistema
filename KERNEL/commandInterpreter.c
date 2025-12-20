@@ -14,7 +14,7 @@ void interpretCommand(Kernel* kernel, const char* command) {
         return;
     }
 
-    if (strcmp(command, "step") == 0) {
+    /*if (strcmp(command, "step") == 0) {
         kernel->rm->mode = STEP;
         return;
     }
@@ -28,6 +28,6 @@ void interpretCommand(Kernel* kernel, const char* command) {
         kernel->rm->mode = VM_MEM;
         return;
     }
-
+*/
     printf("Unknown command: %s\n", command);
 }

@@ -10,21 +10,10 @@ void jump(VM* vm, RM* rm, uint8_t jumpLocation);
 
 void noJump(VM* vm, RM* rm);
 
-void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id, int priority, Kernel* kernel) {
+void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id) {
     vm->rm = rm;
     vm->cpu = cpu;
-
     vm->id = id;
-    vm->state = READY;
-    vm->kernel = kernel;
-    vm->priority = priority;
-
-    if (priority == T_SYSTEM)
-        vm->currentList = kernel->readySystem;
-    else
-        vm->currentList = kernel->readyUser;
-
-    addItem(vm->currentList, vm);
 }
 
 void destroyVM(VM* vm) {

@@ -1,3 +1,3 @@
 #pragma once
 
-char* readFromInterface(void);
+void readFromInterface(char **output);

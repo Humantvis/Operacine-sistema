@@ -13,10 +13,14 @@ void initKernel(Kernel* kernel, RM* rm, ExternalMemory* memory) {
     initList(kernel->readyUser, T_USER, kernel);
 }
 
-
+//iskviestas start stop
 void scheduler(Kernel* kernel) {
     while(true) {
-        char* cmd = readFromInterface();
+
+        startProcess(kernel->runningProcess, T_SYSTEM, InterruptHandler);
+        //interrupt handling bus(runningProcess->cpu->pi ir si)
+        char *cmd = NULL;
+        startProcess(kernel->runningProcess, T_SYSTEM, ReadFromInterface);
         if (cmd != NULL) {
             interpretCommand(kernel, cmd);
         }

@@ -110,3 +110,12 @@ enum SupervisorInterrupt{
     SI_PUT_DATA,
     SI_HALT
 };
+enum SystemProcesses{
+    Scheduler,
+    ReadFromInterface,
+    JobToSwap,
+    MainProc,
+    JobGovernor,
+    Loader,
+    InterruptHandler
+};

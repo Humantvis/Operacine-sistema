@@ -1,8 +1,7 @@
 #pragma once
-
 #include "../defines.h"
 #include "kernel.h"
 
 typedef struct Kernel Kernel;
 
-void mainProc(Kernel* kernel);
+void start(Kernel* kernel);

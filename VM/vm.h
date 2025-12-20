@@ -21,15 +21,11 @@ typedef struct Channel_device Channel_device;
 typedef struct VM {
     RM* rm;
     VM_CPU* cpu;
-
     int id;
-    int priority;
-    int state;
-    ProcessList* currentList;
-    Kernel* kernel;
+
 } VM;
 
-void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id, int priority, Kernel* kernel);
+void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id);
 
 void destroyVM(VM* vm);
 
