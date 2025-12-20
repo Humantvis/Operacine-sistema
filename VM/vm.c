@@ -27,46 +27,56 @@ void destroyVM(VM* vm) {
 
 void runVM(RM* rm, VM* vm) {
     debug(rm, vm, rm->channelDevice);
-    while (allowedToRun(rm, vm) == 1) {
-        int action = rm->memory->supervisorMemory->buffer[0];
+    bool end = false;
+    for(int i = 0; i < COMMANDS_PER_CALL; i++) {
+        if(allowedToRun(rm, vm) == 1) {
+            int action = rm->memory->supervisorMemory->buffer[0];
 
-        if (action == 0) {
+            if (action == 0) {
 
-            uint8_t instruction = readOpCode(vm, rm);
+                uint8_t instruction = readOpCode(vm, rm);
 
-            if(instruction == HALT) {
-            outputchannel(rm->channelDevice, "HALT");
-                break;
-            } 
-            else {
-                executeInstruction(vm, instruction, rm, 1);
+                if(instruction == HALT) {
+                    outputchannel(rm->channelDevice, "HALT");
+                    end = true;
+                    break;
+                }
+                else {
+                    executeInstruction(vm, instruction, rm, 1);
+                }
+            } else {
+                if(getIc(vm) != 0) {
+                    debug(rm, vm, rm ->channelDevice);
+                }
+                uint8_t instruction = readOpCode(vm, rm);
+        
+                if(instruction == HALT) {
+                    outputchannel(rm->channelDevice, "HALT");
+                    end = true;
+                    break;
+                } else {
+                    executeInstruction(vm, instruction, rm, 1);
+                }
+
+                //next command
+                uint8_t tempIc = getIc(vm);
+                uint8_t tempOffset = getOffset(vm);
+                instruction = readOpCode(vm, rm);
+                if(instruction == HALT) {
+                    outputchannel(rm->channelDevice, "Next Instruction: HALT");
+                } 
+                else {
+                    executeInstruction(vm, instruction, rm, 0);
+                }
+                setIc(vm, tempIc);
+                setOffset(vm, tempOffset);
             }
         } else {
-            if(getIc(vm) != 0) {
-                debug(rm, vm, rm ->channelDevice);
-            }
-            uint8_t instruction = readOpCode(vm, rm);
-    
-            if(instruction == HALT) {
-                outputchannel(rm->channelDevice, "HALT");
-                break;
-            } else {
-                executeInstruction(vm, instruction, rm, 1);
-            }
-
-            //next command
-            uint8_t tempIc = getIc(vm);
-            uint8_t tempOffset = getOffset(vm);
-            instruction = readOpCode(vm, rm);
-            if(instruction == HALT) {
-                outputchannel(rm->channelDevice, "Next Instruction: HALT");
-            } 
-            else {
-                executeInstruction(vm, instruction, rm, 0);
-            }
-            setIc(vm, tempIc);
-            setOffset(vm, tempOffset);
+            break;
         }
+    }
+    if(end) {
+        
     }
 }
 

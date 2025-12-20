@@ -35,6 +35,8 @@
 
 #define EXTERNAL_MEMORY_SIZE (64 * PAGE_SIZE)
 
+#define COMMANDS_PER_CALL 5
+
 enum opCodes{
     //0:
     WAIT,
@@ -110,6 +112,16 @@ enum SupervisorInterrupt{
     SI_PUT_DATA,
     SI_HALT
 };
+
+typedef enum ResourceType {
+    RES_CPU,
+    RES_CHANNEL,
+    RES_PAGING,
+    RES_EXTERNAL_MEMORY,
+    RES_INPUT,
+    RES_COUNT
+} ResourceType;
+
 enum SystemProcesses{
     Scheduler,
     ReadFromInterface,
