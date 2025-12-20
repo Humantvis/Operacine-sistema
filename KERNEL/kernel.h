@@ -2,6 +2,9 @@
 #include "../defines.h"
 #include "../RM/rm.h"
 #include "../VM/vm.h"
+#include "loader.h"
+#include "jobGovernor.h"
+#include "mainProc.h"
 #include "processList.h"
 
 typedef struct VM VM;
@@ -19,8 +22,9 @@ typedef struct Kernel {
     //SupervisorInterrupt si;
 
     RM* rm;
+    ExternalMemory* memory;
 
 } Kernel;
 
-void initKernel(Kernel* kernel, RM* rm);
+void initKernel(Kernel* kernel, RM* rm, ExternalMemory* memory);
 void scheduler(Kernel* kernel);

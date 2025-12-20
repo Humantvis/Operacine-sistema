@@ -28,10 +28,8 @@ int main() {
     ExternalMemory* externalMemory = malloc(sizeof(ExternalMemory));
     initializeExternalmemory(externalMemory);
 
-    parse(externalMemory, "code.txt", 0);
-
     Kernel* kernel = malloc(sizeof(Kernel));
-    initKernel(kernel, rm);
+    initKernel(kernel, rm, externalMemory);
 
     scheduler(kernel);
 
