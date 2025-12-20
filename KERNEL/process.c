@@ -47,4 +47,14 @@ void startProcess(Process* process, int priority, int id) {
 }
 void changeState(Process* process, int newState) {
     process->state = newState;
+    if (newState == RUNNING) {
+        process->kernel->runningProcess = process;
+        process->currentList = NULL;
+
+        if (process->priority == T_SYSTEM) {
+            process->kernel->readySystem->count--;
+        } else {
+            process->kernel->readyUser->count--;
+        }
+    }
 }
