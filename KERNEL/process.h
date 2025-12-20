@@ -16,3 +16,4 @@ typedef struct Process {
 
 void initProcess(Process* process, int id, int priority, Kernel* kernel, VM* vm);
 void startProcess(Process* process, int priority, int id);
+void changeState(Process* process, int newState);

@@ -19,7 +19,7 @@ void startProcess(Process* process, int priority, int id) {
                 break;
             case ReadFromInterface: {
                 char* cmd = NULL;
-                readFromInterface(&cmd); // FIXED
+                readFromInterface(&cmd); 
                 if (cmd) interpretCommand(process->kernel, cmd);
                 break;
             }
@@ -36,7 +36,7 @@ void startProcess(Process* process, int priority, int id) {
                 loadProgram(process->kernel->rm, process->kernel->memory, process->id);
                 break;
             case InterruptHandler:
-                //call interrupt handler function
+                interruptHandler(process->kernel);
                 break;
             default:
                 scheduler(process->kernel);
@@ -44,4 +44,7 @@ void startProcess(Process* process, int priority, int id) {
         }
 
     }
+}
+void changeState(Process* process, int newState) {
+    process->state = newState;
 }

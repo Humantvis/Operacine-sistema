@@ -32,7 +32,6 @@ void runJobGovernor(Kernel* kernel) {
         kernel->readyUser->items[i - 1] = kernel->readyUser->items[i];
     }
     kernel->readyUser->count--;
-
     kernel->runningProcess->vm = vm;
 
     runVM(kernel->rm, vm);
