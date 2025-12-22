@@ -1,6 +1,6 @@
 #include "loader.h"
 #include <stdio.h>
-#include <string.h> // memcpy
+#include <string.h> //memcpy
 
 void loadProgram(RM* rm, ExternalMemory* externalMemory, int program) {
 
