@@ -1,0 +1,36 @@
+; a = 10
+00 0A
+; b = 7
+01 07
+; max (rezultatas)
+02 00
+
+$START
+; R1=a
+MR 00 R1
+; R2=b
+MR 01 R2
+
+; Jei a == b -> max=a
+CMP R1 R2
+JE 3
+
+; Jei a < b (SF=1, nes Rx<Ry) -> max=b
+JL 4
+
+; Kitu atveju a > b -> max=a
+JMP 5
+
+3:
+MW 02 R1
+JMP 6
+
+4:
+MW 02 R2
+JMP 6
+
+5:
+MW 02 R1
+6:
+HALT
+$END

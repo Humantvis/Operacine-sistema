@@ -1,0 +1,19 @@
+; 0x2A = 42
+00 2A
+; rezultatas
+01 00
+
+$START
+MR 00 R1
+
+; kritinė sekcija
+WAIT
+; Shared[00] := R1
+SMW 00 R1
+; R2 := Shared[00]
+SMR 00 R2
+SIGNAL
+
+MW 01 R2
+HALT
+$END

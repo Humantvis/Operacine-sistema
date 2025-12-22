@@ -1,0 +1,41 @@
+00 05
+01 00
+02 00
+03 01
+
+$START
+
+; R1 := N
+MR 00 R1
+
+; R4 := 1 (konstanta)
+MR 03 R4
+
+; R2 := 0 (sum)
+SUB R2 R2 R2
+
+; R3 := 1 (i)
+SUB R3 R3 R3
+ADD R3 R4 R3
+
+1:
+; sum += i
+ADD R2 R3 R2
+
+; i++
+ADD R3 R4 R3
+
+; CMP Rx=R1 (N), Ry=R3 (i)
+; SF=1 kai N < i  -> i per didelis, išeinam
+CMP R1 R3
+JL 2
+
+; kartoti
+JMP 1
+
+2:
+; [01] := sum
+MW 01 R2
+
+HALT
+$END

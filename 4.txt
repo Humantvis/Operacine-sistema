@@ -1,0 +1,31 @@
+; x = 6
+00 06
+; y = 4
+01 04
+; prod_low  (R3)
+02 00
+; prod_high (R4)
+03 00
+; quot      (R5)
+04 00
+; rem       (R6)
+05 00
+
+$START
+; x
+MR 00 R1
+; y
+MR 01 R2
+
+R3,R4 = x*y
+MUL R1 R2 R3 R4
+MW 02 R3
+MW 03 R4
+
+; R5= x/y, R6 = liekana
+DIV R1 R2 R5 R6
+MW 04 R5
+MW 05 R6
+
+HALT
+$END
