@@ -1,25 +1,66 @@
 #include "processList.h"
-void initList(ProcessList* list, int type, Kernel* kernel)
-{
-    list->type = type;
-    list -> kernel = kernel;
+
+void initProcessList(ProcessList* list) {
     list->count = 0;
-    memset(list->items, 0, sizeof(list->items));
-}
-void addItem (ProcessList* list, Process* process)
-{
-    if (list->count < MAX_PROCESESSES)
-    {
-        list->items[list->count] = process;
-        list->count++;
+    for (int i = 0; i < MAX_PROCESESSES; i++) {
+        list->items[i] = NULL;
     }
 }
-void jobToSwap(Process* process)
-{
-    if (process->priority == T_SYSTEM) {
-        process->currentList = process->kernel->readySystem;
-    } else {
-        process->currentList = process->kernel->readyUser;
+
+void insertProcess(ProcessList* list, Process* p) {
+    if (!list || !p) return;
+
+    for (int i = 0; i < list->count; i++) {
+        if (list->items[i] == p) return; // already in queue
     }
-    addItem(process->currentList, process);
+
+    list->items[list->count++] = p;
+}
+
+Process* popProcess(ProcessList* list) {
+    if (list == NULL || list->count == 0) {
+        return NULL;
+    }
+
+    Process* p = list->items[0];
+
+    // shift left
+    for (int i = 1; i < list->count; i++) {
+        list->items[i - 1] = list->items[i];
+    }
+
+    list->count--;
+    list->items[list->count] = NULL;
+
+    return p;
+}
+
+bool removeProcess(ProcessList* list, Process* p) {
+    if (list == NULL || p == NULL) return false;
+
+    int idx = -1;
+    for (int i = 0; i < list->count; i++) {
+        if (list->items[i] == p) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1) return false;
+
+    for (int i = idx + 1; i < list->count; i++) {
+        list->items[i - 1] = list->items[i];
+    }
+
+    list->count--;
+    list->items[list->count] = NULL;
+    return true;
+}
+
+bool containsProcess(ProcessList* list, Process* p) {
+    if (list == NULL || p == NULL) return false;
+
+    for (int i = 0; i < list->count; i++) {
+        if (list->items[i] == p) return true;
+    }
+    return false;
 }

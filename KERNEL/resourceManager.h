@@ -7,7 +7,7 @@
 typedef struct Resource {
     const char* name;
     bool busy;
-    VM* owner;
+    Process* owner;
     ProcessList* waitQ;
 } Resource;
 
@@ -16,9 +16,5 @@ typedef struct ResourceManager {
     Resource resources[RES_COUNT];
 } ResourceManager;
 
-void initResourceManager(ResourceManager* rm);
-void destroyResourceManager(ResourceManager* rm);
-
-bool requestResource(ResourceManager* rm, ResourceType type, VM* vm);
-
-void releaseResource(ResourceManager* rm, ResourceType type, VM* owner);
+bool requestResource(ResourceManager* rm, ResourceType type, Process* p);
+void releaseResource(ResourceManager* rm, ResourceType type, Process* owner);

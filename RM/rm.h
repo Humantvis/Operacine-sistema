@@ -20,6 +20,7 @@ typedef struct RM {
     Channel_device* channelDevice;
     PagingDevice* pagingDevice;
     Kernel* kernel;
+    int sharedSemaphore;
 } RM;
 
 void initRM(RM* rm, RM_CPU* cpu, RM_Memory* memory, Channel_device* channelDevice, PagingDevice* pagingDevice);

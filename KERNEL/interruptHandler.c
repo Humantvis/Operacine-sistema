@@ -1,40 +1,48 @@
 #include "interruptHandler.h"
+#include "process.h"
+#include <stdio.h>
 
 void handleInterrupts(Kernel* kernel) {
-    switch(kernel->rm->cpu->pi) {
+    Process* p = kernel->runningProcess;
+    if (!p) return;
+
+    switch (kernel->rm->cpu->pi) {
         case PI_NONE:
             break;
+
         case PI_INVALID_OPCODE:
-            printf("Program Interrupt: Invalid Opcode\n");
-            changeState(kernel->runningProcess, READY_STOP);
-            break;
         case PI_INVALID_ADDRESS:
-            printf("Program Interrupt: Invalid Address\n");
-            changeState(kernel->runningProcess, READY_STOP);
-            break; 
         case PI_OVERFLOW:
-            printf("Program Interrupt: Overflow\n");
-            changeState(kernel->runningProcess, READY_STOP);
-            break;
         case PI_ILLEGAL_ASSIGNMENT:
-            printf("Program Interrupt: Illegal Assignment\n");
-            changeState(kernel->runningProcess, READY_STOP);
-            break;
+            printf("Program Interrupt: terminating process %d\n", p->id);
+
+            kernel->rm->cpu->pi = PI_NONE;
+            kernel->rm->cpu->si = SI_NONE;
+            finishProcess(kernel, p);
+            return;
     }
+
     switch (kernel->rm->cpu->si) {
         case SI_NONE:
             break;
+
         case SI_GET_DATA:
-            printf("Supervisor Interrupt: Get Data\n");
-            changeState(kernel->runningProcess, SI_GET_DATA);
-            break;
+            kernel->rm->cpu->pi = PI_NONE;
+            kernel->rm->cpu->si = SI_NONE;
+
+            changeState(p, BLOCKED_STOP);
+            return;
+
         case SI_PUT_DATA:
-            printf("Supervisor Interrupt: Put Data\n");
-            changeState(kernel->runningProcess, SI_PUT_DATA);
-            break;
+            kernel->rm->cpu->pi = PI_NONE;
+            kernel->rm->cpu->si = SI_NONE;
+            changeState(p, BLOCKED_STOP);
+            return;
+
         case SI_HALT:
-            printf("Supervisor Interrupt: Halt\n");
-            changeState(kernel->runningProcess, READY_STOP);
-            break;
+            kernel->rm->cpu->pi = PI_NONE;
+            kernel->rm->cpu->si = SI_NONE;
+            finishProcess(kernel, p);
+            return;
     }
 }

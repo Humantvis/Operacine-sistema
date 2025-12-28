@@ -1,60 +1,74 @@
 #include "process.h"
+#include "interruptHandler.h"
 
 void initProcess(Process* process, int id, int priority, Kernel* kernel, VM* vm) {
     process->id = id;
     process->priority = priority;
     process->state = READY;
+    process->timeLeft = 0;
+    process->currentList = NULL;
     process->kernel = kernel;
     process->vm = vm;
+
+    process->debugInitialized = false;
+    process->lastDebugMode = RUN_FULL;
 }
-void startProcess(Process* process, int priority, int id) {
-    process->kernel->runningProcess = process;
-    if (process->vm!= NULL && process->priority == T_USER) {
+
+void startProcess(ProcessList* processList, Process* process, int priority, int id) {
+    (void)priority;
+    (void)id;
+
+    if (process->vm != NULL && process->priority == T_USER) {
         submitJob(process->kernel, process->id);
+        return;
     }
+
     if (process->priority == T_SYSTEM) {
-        switch(process->id) {
-            case Scheduler:
-                scheduler(process->kernel);
-                break;
+        switch (process->id) {
             case ReadFromInterface: {
                 char* cmd = NULL;
-                readFromInterface(&cmd); 
-                if (cmd) interpretCommand(process->kernel, cmd);
+                readFromInterface(&cmd);
+                if (cmd) {
+                    interpretCommand(process->kernel, cmd);
+                }
                 break;
             }
+
             case JobToSwap:
-                jobToSwap(process);
+                insertProcess(processList, process);
                 break;
-            case MainProc:
-                mainProc(process->kernel);
-                break;
-            case JobGovernor:
-                runJobGovernor(process->kernel);
-                break;
+
             case Loader:
                 loadProgram(process->kernel->rm, process->kernel->memory, process->id);
                 break;
+
             case InterruptHandler:
-                interruptHandler(process->kernel);
+                handleInterrupts(process->kernel);
                 break;
+
             default:
-                scheduler(process->kernel);
                 break;
         }
-
     }
 }
+
 void changeState(Process* process, int newState) {
     process->state = newState;
+
     if (newState == RUNNING) {
         process->kernel->runningProcess = process;
         process->currentList = NULL;
-
-        if (process->priority == T_SYSTEM) {
-            process->kernel->readySystem->count--;
-        } else {
-            process->kernel->readyUser->count--;
-        }
     }
+}
+
+void preemptProcess(Kernel* kernel, Process* p) {
+    changeState(p, READY);
+    kernel->runningProcess = NULL;
+
+    insertProcess(kernel->readyUser, p);
+}
+
+void finishProcess(Kernel* kernel, Process* p) {
+    changeState(p, TERIMINATED);
+    kernel->runningProcess = NULL;
 }

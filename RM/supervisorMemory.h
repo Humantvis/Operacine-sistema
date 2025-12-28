@@ -11,7 +11,7 @@ typedef struct SupervisorMemory {
 
     uint8_t stateR[MAX_PROCESESSES][REGISTERS];
 
-    uint8_t* stateCi[MAX_PROCESESSES];
+    uintptr_t stateCi[MAX_PROCESESSES];
 
     uint8_t stateOffset[MAX_PROCESESSES];
 

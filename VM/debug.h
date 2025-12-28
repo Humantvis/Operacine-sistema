@@ -8,5 +8,6 @@
 typedef struct RM RM;
 typedef struct VM VM;
 typedef struct Channel_device Channel_device;
+typedef struct Kernel Kernel;
 
-void debug(RM* rm, VM* vm, Channel_device* channelDevice);
+uint8_t debug(Kernel* kernel, VM* vm, Channel_device* channelDevice);

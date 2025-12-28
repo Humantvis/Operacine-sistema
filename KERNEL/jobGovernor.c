@@ -7,34 +7,42 @@ void initJobGovernor(Kernel* kernel) {
 }
 
 void submitJob(Kernel* kernel, int programId) {
+    /* 1. Allocate VM CPU */
     VM_CPU* vm_cpu = malloc(sizeof(VM_CPU));
-    
+    if (!vm_cpu) {
+        printf("[JobGovernor] VM_CPU allocation failed\n");
+        return;
+    }
+
+    /* 2. Allocate VM */
     VM* vm = malloc(sizeof(VM));
     if (!vm) {
         printf("[JobGovernor] VM allocation failed\n");
+        free(vm_cpu);
         return;
     }
-    
+
     initVM(kernel->rm, vm, vm_cpu, programId);
-    
-    kernel->readyUser->items[kernel->readyUser->count++]->vm = vm;
-    initProcess(kernel->readyUser->items[kernel->readyUser->count], programId, T_USER, kernel, kernel->readyUser->items[kernel->readyUser->count]->vm);
-    loadProgram(kernel->rm, kernel->memory, programId);
-}
 
-void runJobGovernor(Kernel* kernel) {
-    if (kernel->readyUser->count == 0)
+    addNewVM(kernel->rm, vm->id);
+
+    /* 3. Allocate Process */
+    Process* p = malloc(sizeof(Process));
+    if (!p) {
+        printf("[JobGovernor] Process allocation failed\n");
+        free(vm);
+        free(vm_cpu);
         return;
-
-    VM* vm = kernel->readyUser->items[0]->vm;
-
-    for (int i = 1; i < kernel->readyUser->count; i++) {
-        kernel->readyUser->items[i - 1] = kernel->readyUser->items[i];
     }
-    kernel->readyUser->count--;
-    kernel->runningProcess->vm = vm;
 
-    runVM(kernel->rm, vm);
+    /* 4. Initialize Process */
+    initProcess(p, programId, T_USER, kernel, vm);
+
+    /* 5. Insert into readyUser queue */
+    insertProcess(kernel->readyUser, p);
+
+    /* 6. Load program into VM memory */
+    loadProgram(kernel->rm, kernel->memory, programId);
 }
 
 void destroyJobGovernor(Kernel* kernel) {

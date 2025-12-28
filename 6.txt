@@ -1,7 +1,0 @@
-$START
-; į atmintį nuo [0x20] (2*16) perskaityti 16 žodžių iš įvedimo
-DMAR 02
-; išvesti 16 žodžių iš [0x20..0x2F]
-DMAW 02
-HALT
-$END

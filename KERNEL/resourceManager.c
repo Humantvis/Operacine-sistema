@@ -1,52 +1,41 @@
 #include "resourceManager.h"
+#include "process.h"
+#include "processList.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-static void list_push(ProcessList* list, VM* vm) {
-    if (!list || !vm) {
-        return;
-    }
+/* ---------- helpers for ProcessList ---------- */
 
-    list->items[list->count++] = vm;
+static void list_push(ProcessList* list, Process* p) {
+    if (!list || !p) return;
+    insertProcess(list, p);
 }
 
-static VM* list_pop_front(ProcessList* list) {
-    if (!list || list->count <= 0) {
-        return NULL;
-    }
-
-    VM* first = list->items[0];
-    for (int i = 1; i < list->count; i++) {
-        list->items[i - 1] = list->items[i];
-    }
-    list->count--;
-    return first;
+static Process* list_pop_front(ProcessList* list) {
+    if (!list || list->count == 0) return NULL;
+    return popProcess(list);
 }
 
+/* ---------- internal helper ---------- */
 
 static Resource* getRes(ResourceManager* rm, ResourceType type) {
-    if (!rm) {
+    if (!rm || type < 0 || type >= RES_COUNT) {
         return NULL;
     }
-
-    if (type < 0 || type >= RES_COUNT) {
-        return NULL;
-    }
-
     return &rm->resources[type];
 }
 
+/* ---------- init / destroy ---------- */
+
 void initResourceManager(ResourceManager* rm) {
-    if (!rm) {
-        return;
-    }
+    if (!rm) return;
 
     for (int i = 0; i < RES_COUNT; i++) {
         rm->resources[i].busy = false;
         rm->resources[i].owner = NULL;
+
         rm->resources[i].waitQ = malloc(sizeof(ProcessList));
-        
-        initList(rm->resources[i].waitQ, T_USER, rm->kernel);
+        initProcessList(rm->resources[i].waitQ);
     }
 
     rm->resources[RES_CPU].name = "CPU";
@@ -57,15 +46,11 @@ void initResourceManager(ResourceManager* rm) {
 }
 
 void destroyResourceManager(ResourceManager* rm) {
-    if (!rm) {
-        return;
-    }
+    if (!rm) return;
 
     for (int i = 0; i < RES_COUNT; i++) {
-        if (rm->resources[i].waitQ) {
-            free(rm->resources[i].waitQ);
-            rm->resources[i].waitQ = NULL;
-        }
+        free(rm->resources[i].waitQ);
+        rm->resources[i].waitQ = NULL;
         rm->resources[i].busy = false;
         rm->resources[i].owner = NULL;
         rm->resources[i].name = NULL;
@@ -74,49 +59,39 @@ void destroyResourceManager(ResourceManager* rm) {
     rm->kernel = NULL;
 }
 
-bool requestResource(ResourceManager* rm, ResourceType type, VM* vm) {
+/* ---------- resource operations ---------- */
+
+bool requestResource(ResourceManager* rm, ResourceType type, Process* p) {
     Resource* r = getRes(rm, type);
-    if (!r || !vm) {
-        return false;
-    }
+    if (!r || !p) return false;
 
     if (!r->busy) {
         r->busy = true;
-        r->owner = vm;
+        r->owner = p;
         return true;
     }
 
-    if (r->owner == vm) {
+    if (r->owner == p) {
         return true;
     }
 
-    list_push(r->waitQ, vm);
+    changeState(p, BLOCKED);
+    list_push(r->waitQ, p);
     return false;
 }
 
-void releaseResource(ResourceManager* rm, ResourceType type, VM* owner) {
+void releaseResource(ResourceManager* rm, ResourceType type, Process* owner) {
     Resource* r = getRes(rm, type);
-    if (!r) {
-        return;
-    }
+    if (!r || r->owner != owner) return;
 
-    if (!r->busy) {
-        return;
-    }
-
-    if (r->owner != owner) {
-        return;
-    }
-
-    VM* next = list_pop_front(r->waitQ);
+    Process* next = list_pop_front(r->waitQ);
 
     if (next) {
         r->busy = true;
         r->owner = next;
 
-        if (rm->kernel && rm->kernel->readyUser) {
-            rm->kernel->readyUser->items[rm->kernel->readyUser->count++] = next;
-        }
+        changeState(next, READY);
+        insertProcess(rm->kernel->readyUser, next);
     } else {
         r->busy = false;
         r->owner = NULL;

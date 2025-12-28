@@ -1,18 +1,20 @@
 #pragma once
-#include "../defines.h"
-#include "kernel.h"
 
-typedef struct Kernel Kernel;
-typedef struct VM VM;
+#include "../defines.h"
+#include "process.h"
+
 typedef struct Process Process;
 
 typedef struct ProcessList {
-    int type;
-    Kernel* kernel;
     Process* items[MAX_PROCESESSES];
     int count;
 } ProcessList;
 
-void initList(ProcessList* list, int type, Kernel* kernel);
-void addItem(ProcessList* list, Process* process);
-void jobToSwap(Process* process);
+void initProcessList(ProcessList* list);
+
+void insertProcess(ProcessList* list, Process* p);
+
+Process* popProcess(ProcessList* list);
+
+bool removeProcess(ProcessList* list, Process* p);
+bool containsProcess(ProcessList* list, Process* p);

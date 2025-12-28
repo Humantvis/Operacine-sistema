@@ -5,6 +5,7 @@ void initRM(RM* rm, RM_CPU* cpu, RM_Memory* memory, Channel_device* channelDevic
     rm->memory = memory;
     rm->channelDevice = channelDevice;
     rm->pagingDevice = pagingDevice;
+    rm->sharedSemaphore = 1;
 }
 
 void destroyRM(RM* rm) {

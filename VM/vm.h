@@ -22,7 +22,7 @@ typedef struct VM {
     RM* rm;
     VM_CPU* cpu;
     int id;
-
+    bool halted;
 } VM;
 
 void initVM(RM* rm, VM* vm, VM_CPU* cpu, int id);

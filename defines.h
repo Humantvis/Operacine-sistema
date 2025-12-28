@@ -35,7 +35,7 @@
 
 #define EXTERNAL_MEMORY_SIZE (64 * PAGE_SIZE)
 
-#define COMMANDS_PER_CALL 5
+#define USER_QUANTUM 3
 
 enum opCodes{
     //0:
@@ -90,7 +90,8 @@ enum ProcessState {
     READY,
     BLOCKED,
     READY_STOP,
-    BLOCKED_STOP
+    BLOCKED_STOP,
+    TERIMINATED
 };
 
 enum ProcessType {
@@ -126,8 +127,6 @@ enum SystemProcesses{
     Scheduler,
     ReadFromInterface,
     JobToSwap,
-    MainProc,
-    JobGovernor,
     Loader,
     InterruptHandler
 };

@@ -5,16 +5,17 @@
 #include "parser/parser.h"
 #include "VM/debug.h"
 
+int systemRunning = 1;
+
 int main() {
     ExternalMemory* externalMemory = malloc(sizeof(ExternalMemory));
     initializeExternalmemory(externalMemory);
 
-    //visos programos cia turi buti parsed
-    /*for(int i = 0; i < 1; i++) {
-        char*  fileName;
+    for (int i = 0; i < 6; i++) {
+        char fileName[32];  // real storage
         snprintf(fileName, sizeof(fileName), "%d.txt", i);
-        parse(externalMemory, fileName, 0);
-    }*/
+        parse(externalMemory, fileName, i);
+    }
 
     RM_CPU* rm_cpu = malloc(sizeof(RM_CPU));
     initRMCPU(rm_cpu);
@@ -39,9 +40,6 @@ int main() {
 
     setKernel(rm, kernel);
     start(kernel);
-
-    
-
 
     destroyRM(rm);
     return 0;

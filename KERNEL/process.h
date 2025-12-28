@@ -9,11 +9,24 @@ typedef struct Process {
     int id;
     int priority;
     int state;
+    int timeLeft;
     ProcessList* currentList;
     Kernel* kernel;
     VM* vm;
-}Process;
+
+    bool debugInitialized;
+    int lastDebugMode;
+} Process;
+
 
 void initProcess(Process* process, int id, int priority, Kernel* kernel, VM* vm);
-void startProcess(Process* process, int priority, int id);
+
+void startProcess(ProcessList* processList, Process* process, int priority, int id);
+
 void changeState(Process* process, int newState);
+
+void preemptProcess(Kernel* kernel, Process* p);
+
+void finishProcess(Kernel* kernel, Process* p);
+
+Process* popProcess(ProcessList* list);
